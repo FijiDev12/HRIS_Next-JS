@@ -1,66 +1,117 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
 
-export default function Home() {
+import { useState, useEffect } from "react";
+import {
+  Box,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  IconButton,
+  InputAdornment,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useAuthStore } from "@/app/store/useAuth";
+import { useRouter } from "next/navigation";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const { login, loading, error, clearError, loadFromStorage, user, accessToken } = useAuthStore();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({ email: "", password: "" });
+
+  // Restore from storage on page load
+  useEffect(() => {
+    loadFromStorage();
+  }, [loadFromStorage]);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    // if (user && accessToken) {
+    //   router.replace("/dashboard");
+    // }
+  }, [user, accessToken, router]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleLogin = async () => {
+    if (!form.email || !form.password) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    const result = await login(form.email, form.password);
+    if (result) {
+      router.push("/dashboard");
+    }
+  };
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: "#0f172a",
+        px: 2,
+      }}
+    >
+      <Paper elevation={6} sx={{ width: "100%", maxWidth: 400, p: 4, borderRadius: 3 }}>
+        <Typography variant="h4" fontWeight={600} align="center" gutterBottom>
+          Login
+        </Typography>
+        <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 3 }}>
+          Welcome back 👋
+        </Typography>
+
+        <TextField
+          label="Email / Username"
+          name="email"
+          fullWidth
+          variant="filled"
+          value={form.email}
+          onChange={handleChange}
+          sx={{ mb: 2 }}
         />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        <TextField
+          label="Password"
+          name="password"
+          type={showPassword ? "text" : "password"}
+          fullWidth
+          variant="filled"
+          value={form.password}
+          onChange={handleChange}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                  {showPassword ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        {error && (
+          <Alert severity="error" sx={{ mt: 2, mb: 1 }} onClose={clearError}>
+            {error}
+          </Alert>
+        )}
+
+        <Button fullWidth variant="contained" sx={{ mt: 3, py: 1.2 }} onClick={handleLogin} disabled={loading}>
+          {loading ? <CircularProgress size={24} color="inherit" /> : "Login"}
+        </Button>
+
+        <Typography variant="body2" align="center" sx={{ mt: 2, color: "gray", cursor: "pointer" }}>
+          Forgot password?
+        </Typography>
+      </Paper>
+    </Box>
   );
 }
