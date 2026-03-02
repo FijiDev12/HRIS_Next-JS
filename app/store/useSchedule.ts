@@ -3,6 +3,8 @@ import { create } from "zustand";
 import api from "@/app/api/withoutAuth/route";
 
 export interface Schedule {
+  endTime: string;
+  startTime: string;
   id: number;
   shiftName: string;
 }
