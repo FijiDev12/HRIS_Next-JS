@@ -208,8 +208,9 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
       const res = await api.patch(`/payroll/period/post/${periodId}`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success(res.data?.message || "Payroll period deleted successfully");
       get().fetchPeriods();
+      toast.success(res.data?.message || "Payroll period deleted successfully");
+      
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Failed to delete payroll period";
       toast.error(errorMsg);

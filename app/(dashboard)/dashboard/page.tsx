@@ -175,6 +175,12 @@ export default function AttendancePage() {
     });
   }, []);
 
+  useEffect(()=>{
+    if(timelogs){
+      console.log(timelogs)
+    }
+  },[timelogs])
+
   if (empLoading) return <Typography>Loading employee data…</Typography>;
   if (empError) return <Typography color="error">{empError}</Typography>;
 
