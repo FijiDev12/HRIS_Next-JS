@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Tabs,
@@ -16,15 +16,20 @@ import PayrollPage from "@/app/(dashboard)/components/payrolls/payroll";
 import ManagementPage from "@/app/(dashboard)/components/payrolls/management";
 import RecordPage from "@/app/(dashboard)/components/payrolls/records";
 import GovContributionPage from "@/app/(dashboard)/components/payrolls/goveContribution";
-/* ===============================
-   MAIN COMPONENT
-=============================== */
 
 export default function ResponsiveTabs() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const [sessionData, setSessionData] = useState<{ roleId?: number; id?: number }>({});
   const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("user");
+      if (stored) setSessionData(JSON.parse(stored));
+    }
+  }, []);
 
   const handleChange = (event: any, newValue: number) => {
     setValue(newValue);
@@ -34,19 +39,21 @@ export default function ResponsiveTabs() {
     setValue(Number(event.target.value));
   };
 
+  // -------------------- Filtered Tabs --------------------
+  const tabs = [
+    { label: "Payroll Management", component: <ManagementPage />, roleRequired: 1 },
+    { label: "Payroll Records", component: <RecordPage />, roleRequired: null },
+    { label: "Gov Contribution", component: <GovContributionPage />, roleRequired: 1 },
+  ].filter(tab => !tab.roleRequired || tab.roleRequired === sessionData.roleId);
+
   return (
     <Box sx={{ width: "100%", p: 2 }}>
       {/* Desktop Tabs */}
       {!isMobile && (
-        <Tabs
-          value={value}
-          onChange={handleChange}
-          textColor="primary"
-          indicatorColor="primary"
-        >
-          <Tab label="Payroll Management" />
-          <Tab label="Payroll Records" />
-          <Tab label="Gov Contribution" />
+        <Tabs value={value} onChange={handleChange} textColor="primary" indicatorColor="primary">
+          {tabs.map((tab, index) => (
+            <Tab key={index} label={tab.label} />
+          ))}
         </Tabs>
       )}
 
@@ -54,18 +61,16 @@ export default function ResponsiveTabs() {
       {isMobile && (
         <FormControl fullWidth sx={{ mb: 2 }}>
           <Select value={value} onChange={handleSelectChange}>
-            <MenuItem value={0}>Payroll Management</MenuItem>
-            <MenuItem value={1}>Payroll Records</MenuItem>
-            <MenuItem value={2}>Gov Contribution</MenuItem>
+            {tabs.map((tab, index) => (
+              <MenuItem key={index} value={index}>{tab.label}</MenuItem>
+            ))}
           </Select>
         </FormControl>
       )}
 
       {/* Render Active Component */}
       <Box sx={{ mt: 3 }}>
-        {value === 0 && <ManagementPage />}
-        {value === 1 && <RecordPage />}
-        {value === 2 && <GovContributionPage />}
+        {tabs[value]?.component}
       </Box>
     </Box>
   );

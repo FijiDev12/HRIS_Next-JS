@@ -3,8 +3,8 @@
 import { Box } from "@mui/material";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -12,14 +12,21 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <ToastContainer />
       <Sidebar />
 
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <Box
+        sx={{
+          flex: 1,
+          minWidth: 0, // ⭐ allows shrinking in flexbox
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <Header />
 
         <Box
           sx={{
             flex: 1,
+            width: "100%",
             bgcolor: "grey.50",
-            p: 3,
           }}
         >
           {children}

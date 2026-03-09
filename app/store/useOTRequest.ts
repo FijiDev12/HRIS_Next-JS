@@ -31,9 +31,12 @@ export interface CreateOTPayload {
   createdBy: number;
 }
 
+/* ✅ ONLY CHANGE IS HERE */
 interface ApproveRejectPayload {
   approverId: number;
   remarks: string;
+  workDate: string;      // added (typed properly)
+  employeeId: number;    // added (typed properly)
 }
 
 /* =========================
@@ -78,7 +81,14 @@ export const useOTRequestStore = create<OTRequestState>((set, get) => ({
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
 
-      set({ otRequests: Array.isArray(res.data.data) ? res.data.data : res.data.data== null ? [] : [res.data.data], loading: false });
+      set({
+        otRequests: Array.isArray(res.data.data)
+          ? res.data.data
+          : res.data.data == null
+          ? []
+          : [res.data.data],
+        loading: false,
+      });
     } catch (err: any) {
       set({
         loading: false,
@@ -91,11 +101,19 @@ export const useOTRequestStore = create<OTRequestState>((set, get) => ({
   fetchOTRequestByEmpId: async (id) => {
     try {
       set({ loading: true, error: null });
+
       const res = await api.get(`/request/ot/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
 
-      set({ otRequests: Array.isArray(res.data.data) ? res.data.data : res.data.data== null ? [] : [res.data.data], loading: false });
+      set({
+        otRequests: Array.isArray(res.data.data)
+          ? res.data.data
+          : res.data.data == null
+          ? []
+          : [res.data.data],
+        loading: false,
+      });
     } catch (err: any) {
       set({
         loading: false,

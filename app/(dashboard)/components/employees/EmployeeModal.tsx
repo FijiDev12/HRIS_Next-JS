@@ -144,7 +144,7 @@ export default function EmployeeModal({
         setToast({ open: true, message: "Employee updated successfully!", severity: "success" });
       } else {
         await createEmployee(payload);
-        await createUser(payload)
+        // await createUser(payload)
         setToast({ open: true, message: "Employee created successfully!", severity: "success" });
       }
       setTimeout(() => onClose(), 800);

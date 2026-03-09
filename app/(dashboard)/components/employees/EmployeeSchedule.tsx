@@ -5,7 +5,7 @@ import {
   TableBody, TableContainer, Paper, Button,
   Modal, Box, Typography, TextField,
   Stack, Select, MenuItem, FormControl,
-  InputLabel
+  InputLabel, Grid, useTheme, useMediaQuery
 } from "@mui/material";
 import { useScheduleStore, Schedule } from "@/app/store/useSchedule";
 
@@ -14,7 +14,7 @@ const modalStyle = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 420,
+  width: 'auto',
   bgcolor: "background.paper",
   boxShadow: 24,
   p: 4,
@@ -23,6 +23,8 @@ const modalStyle = {
 
 export default function ScheduleTab() {
   const { schedules, fetchSchedules, createSchedule, updateSchedule, deleteSchedule } = useScheduleStore();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [open, setOpen] = useState(false);
   const [currentSchedule, setCurrentSchedule] = useState<Schedule | null>(null);
@@ -45,12 +47,7 @@ export default function ScheduleTab() {
       setShiftName(schedule.shiftName);
       setStartTime(schedule.startTime || "");
       setEndTime(schedule.endTime || "");
-
-      if (!schedule.startTime && !schedule.endTime) {
-        setScheduleType("FLEX");
-      } else {
-        setScheduleType("STANDARD");
-      }
+      setScheduleType(!schedule.startTime && !schedule.endTime ? "FLEX" : "STANDARD");
     } else {
       setShiftName("");
       setStartTime("");
@@ -73,7 +70,6 @@ export default function ScheduleTab() {
 
   const handleSave = async () => {
     if (!shiftName) return;
-
     const payload = {
       shiftName,
       startTime: scheduleType === "STANDARD" ? startTime : "",
@@ -81,85 +77,92 @@ export default function ScheduleTab() {
       flexStart: "",
       flexEnd: ""
     };
-
-    if (isEdit && currentSchedule) {
-      await updateSchedule(currentSchedule.id, payload);
-    } else {
-      await createSchedule(payload);
-    }
-
+    if (isEdit && currentSchedule) await updateSchedule(currentSchedule.id, payload);
+    else await createSchedule(payload);
     handleClose();
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm("Are you sure you want to delete this schedule?")) {
-      await deleteSchedule(id);
-    }
+    if (confirm("Are you sure you want to delete this schedule?")) await deleteSchedule(id);
   };
 
   return (
     <>
-      <Button
-        variant="contained"
-        sx={{ mb: 2 }}
-        onClick={() => handleOpen(null, false)}
-      >
+      <Button variant="contained" sx={{ mb: 2 }} onClick={() => handleOpen(null, false)}>
         Create Schedule
       </Button>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Shift Name</TableCell>
-              <TableCell>Start Time</TableCell>
-              <TableCell>End Time</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {schedules?.length === 0 ? (
+      {/* Desktop Table */}
+      {!isMobile && (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={5} align="center">
-                  No schedule found
-                </TableCell>
+                <TableCell>ID</TableCell>
+                <TableCell>Shift Name</TableCell>
+                <TableCell>Start Time</TableCell>
+                <TableCell>End Time</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
-            ) : (
-              schedules.map((schedule) => (
-                <TableRow key={schedule.id}>
-                  <TableCell>{schedule.id}</TableCell>
-                  <TableCell>{schedule.shiftName}</TableCell>
-                  <TableCell>{schedule.startTime || "FLEX"}</TableCell>
-                  <TableCell>{schedule.endTime || "-"}</TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={1}>
-                      <Button size="small" variant="outlined" onClick={() => handleOpen(schedule, false)}>
-                        View
-                      </Button>
-                      <Button size="small" variant="contained" onClick={() => handleOpen(schedule, true)}>
-                        Edit
-                      </Button>
-                      <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(schedule.id)}>
-                        Delete
-                      </Button>
-                    </Stack>
-                  </TableCell>
+            </TableHead>
+            <TableBody>
+              {schedules?.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">No schedule found</TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              ) : (
+                schedules.map((schedule) => (
+                  <TableRow key={schedule.id}>
+                    <TableCell>{schedule.id}</TableCell>
+                    <TableCell>{schedule.shiftName}</TableCell>
+                    <TableCell>{schedule.startTime || "FLEX"}</TableCell>
+                    <TableCell>{schedule.endTime || "-"}</TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={1}>
+                        <Button size="small" variant="outlined" onClick={() => handleOpen(schedule, false)}>View</Button>
+                        <Button size="small" variant="contained" onClick={() => handleOpen(schedule, true)}>Edit</Button>
+                        <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(schedule.id)}>Delete</Button>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
+      {/* Mobile Grid */}
+      {isMobile && (
+        <Grid container spacing={2}>
+          {schedules?.length === 0 ? (
+            <Grid size={[12]}>
+              <Typography align="center">No schedule found</Typography>
+            </Grid>
+          ) : (
+            schedules.map((schedule) => (
+              <Grid size={[12]} key={schedule.id}>
+                <Paper sx={{ p: 2 }} elevation={3}>
+                  <Typography>ID: {schedule.id}</Typography>
+                  <Typography>Shift: {schedule.shiftName}</Typography>
+                  <Typography>Time: {schedule.startTime || "FLEX"} - {schedule.endTime || "-"}</Typography>
+                  <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                    <Button size="small" variant="outlined" onClick={() => handleOpen(schedule, false)}>View</Button>
+                    <Button size="small" variant="contained" onClick={() => handleOpen(schedule, true)}>Edit</Button>
+                    <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(schedule.id)}>Delete</Button>
+                  </Stack>
+                </Paper>
+              </Grid>
+            ))
+          )}
+        </Grid>
+      )}
+
+      {/* Modal */}
       <Modal open={open} onClose={handleClose}>
         <Box sx={modalStyle}>
           <Typography variant="h6" gutterBottom>
-            {isEdit
-              ? "Edit Schedule"
-              : currentSchedule
-              ? "View Schedule"
-              : "Create Schedule"}
+            {isEdit ? "Edit Schedule" : currentSchedule ? "View Schedule" : "Create Schedule"}
           </Typography>
 
           <TextField
@@ -175,13 +178,7 @@ export default function ScheduleTab() {
             <>
               <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel>Schedule Type</InputLabel>
-                <Select
-                  value={scheduleType}
-                  label="Schedule Type"
-                  onChange={(e) =>
-                    setScheduleType(e.target.value as "STANDARD" | "FLEX")
-                  }
-                >
+                <Select value={scheduleType} label="Schedule Type" onChange={(e) => setScheduleType(e.target.value as "STANDARD" | "FLEX")}>
                   <MenuItem value="STANDARD">Standard Schedule</MenuItem>
                   <MenuItem value="FLEX">Flex Schedule</MenuItem>
                 </Select>
@@ -189,39 +186,18 @@ export default function ScheduleTab() {
 
               {scheduleType === "STANDARD" && (
                 <>
-                  <TextField
-                    label="Start Time"
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                  />
-
-                  <TextField
-                    label="End Time"
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                  />
+                  <TextField label="Start Time" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth sx={{ mb: 2 }} />
+                  <TextField label="End Time" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth sx={{ mb: 2 }} />
                 </>
               )}
             </>
           )}
 
           {(isEdit || !currentSchedule) && (
-            <Button variant="contained" onClick={handleSave} fullWidth>
-              {isEdit ? "Save Changes" : "Create"}
-            </Button>
+            <Button variant="contained" onClick={handleSave} fullWidth>{isEdit ? "Save Changes" : "Create"}</Button>
           )}
 
-          <Button variant="outlined" onClick={handleClose} fullWidth sx={{ mt: 1 }}>
-            Close
-          </Button>
+          <Button variant="outlined" onClick={handleClose} fullWidth sx={{ mt: 1 }}>Close</Button>
         </Box>
       </Modal>
     </>

@@ -23,6 +23,8 @@ import {
   Select,
   MenuItem,
   CircularProgress,
+  useTheme,
+  useMediaQuery,
   TablePagination,
 } from "@mui/material";
 
@@ -58,25 +60,23 @@ export default function PositionsPage() {
   const [viewOpen, setViewOpen] = useState(false);
   const [currentPosition, setCurrentPosition] = useState<Position | null>(null);
   const [page, setPage] = useState(0);
-  const rowsPerPage = 3; // fixed
+  const rowsPerPage = 3;
   const [positionData, setPositionData] = useState({
     departmentId: 0,
     positionName: "",
     createdBy: 1,
   });
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   useEffect(() => {
     fetchPositions();
     fetchDepartments();
   }, [fetchPositions, fetchDepartments]);
 
-  // Map department IDs → names
   const departmentNames: Record<number, string> = {};
   departments.forEach((d) => (departmentNames[d.id] = d.departmentName));
-
-  /* =========================
-     Handlers
-  ========================= */
 
   const handleAdd = async () => {
     if (!positionData.positionName) return alert("Position name required");
@@ -98,11 +98,12 @@ export default function PositionsPage() {
       await deletePosition(id);
     }
   };
+
   const sortedPositions = [...positions].sort((a, b) => a.id - b.id);
+  const displayedPositions = sortedPositions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
     <Box sx={{ p: 2 }}>
-      {/* Header */}
       <Stack direction="row" justifyContent="space-between" sx={{ mb: 2 }}>
         <Typography variant="h4">Positions Management</Typography>
         <Button variant="contained" onClick={() => setAddOpen(true)}>Add Position</Button>
@@ -120,76 +121,86 @@ export default function PositionsPage() {
         </Grid>
       </Grid>
 
-      {/* Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Department</TableCell>
-              <TableCell>Position Name</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {
-            sortedPositions?.length === 0 ? 
-                          <TableRow>
-                            <TableCell colSpan={4} align="center">  No position found</TableCell>
-                          </TableRow>
-                        :
-            sortedPositions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((pos) => (
-              <TableRow key={pos.id}>
-                <TableCell>{pos.id}</TableCell>
-                <TableCell>{departmentNames[pos.departmentId] || pos.departmentId}</TableCell>
-                <TableCell>{pos.positionName}</TableCell>
-                <TableCell>
-                  <Stack direction="row" spacing={1}>
-                    <Button size="small" onClick={() => { setCurrentPosition(pos); setViewOpen(true); }}>
-                      View
-                    </Button>
-                    <Button
-                      size="small"
-                      onClick={() => {
-                        setCurrentPosition(pos);
-                        setPositionData({
-                          departmentId: pos.departmentId,
-                          positionName: pos.positionName,
-                          createdBy: 1,
-                        });
-                        setEditOpen(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button size="small" color="error" onClick={() => handleDelete(pos.id)}>Delete</Button>
-                  </Stack>
-                </TableCell>
+      {/* Desktop Table */}
+      {!isMobile && (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell>Department</TableCell>
+                <TableCell>Position Name</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <TablePagination
-          component="div"
-          count={sortedPositions.length}
-          page={page}
-          onPageChange={(e, newPage) => setPage(newPage)}
-          rowsPerPage={rowsPerPage}
-          rowsPerPageOptions={[rowsPerPage]}
-        />
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {displayedPositions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">No position found</TableCell>
+                </TableRow>
+              ) : (
+                displayedPositions.map((pos) => (
+                  <TableRow key={pos.id}>
+                    <TableCell>{pos.id}</TableCell>
+                    <TableCell>{departmentNames[pos.departmentId] || pos.departmentId}</TableCell>
+                    <TableCell>{pos.positionName}</TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={1}>
+                        <Button size="small" onClick={() => { setCurrentPosition(pos); setViewOpen(true); }}>View</Button>
+                        <Button size="small" onClick={() => { setCurrentPosition(pos); setPositionData({ departmentId: pos.departmentId, positionName: pos.positionName, createdBy: 1 }); setEditOpen(true); }}>Edit</Button>
+                        <Button size="small" color="error" onClick={() => handleDelete(pos.id)}>Delete</Button>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+          <TablePagination
+            component="div"
+            count={positions.length}
+            page={page}
+            onPageChange={(e, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[rowsPerPage]}
+          />
+        </TableContainer>
+      )}
 
+      {/* Mobile Cards */}
+      {isMobile && (
+        <Grid container spacing={2}>
+          {displayedPositions.length === 0 ? (
+            <Grid size={[12, 12, 12]}>
+              <Typography align="center">No positions found</Typography>
+            </Grid>
+          ) : (
+            displayedPositions.map((pos) => (
+              <Grid size={[12]} key={pos.id}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="subtitle1">{pos.positionName}</Typography>
+                    <Typography variant="body2">Department: {departmentNames[pos.departmentId] || pos.departmentId}</Typography>
+                    <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                      <Button size="small" onClick={() => { setCurrentPosition(pos); setViewOpen(true); }}>View</Button>
+                      <Button size="small" onClick={() => { setCurrentPosition(pos); setPositionData({ departmentId: pos.departmentId, positionName: pos.positionName, createdBy: 1 }); setEditOpen(true); }}>Edit</Button>
+                      <Button size="small" color="error" onClick={() => handleDelete(pos.id)}>Delete</Button>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))
+          )}
+        </Grid>
+      )}
+
+      {/* Add/Edit/View Modals */}
       {/* Add Modal */}
       <Modal open={addOpen} onClose={() => setAddOpen(false)}>
         <Box sx={modalStyle}>
           <Typography variant="h6">Add Position</Typography>
           <Stack spacing={2} mt={2}>
-            <TextField
-              label="Position Name"
-              value={positionData.positionName}
-              onChange={(e) => setPositionData({ ...positionData, positionName: e.target.value })}
-              fullWidth
-            />
+            <TextField label="Position Name" value={positionData.positionName} onChange={(e) => setPositionData({ ...positionData, positionName: e.target.value })} fullWidth />
             <FormControl fullWidth>
               <InputLabel id="department-select-label">Department</InputLabel>
               <Select
@@ -198,17 +209,9 @@ export default function PositionsPage() {
                 onChange={(e) => setPositionData({ ...positionData, departmentId: Number(e.target.value) })}
                 label="Department"
               >
-                {departments.length === 0 ? (
-                  <MenuItem value="">
-                    <CircularProgress size={20} />
-                  </MenuItem>
-                ) : (
-                  departments.map((d) => (
-                    <MenuItem key={d.id} value={d.id}>
-                      {d.departmentName}
-                    </MenuItem>
-                  ))
-                )}
+                {departments.length === 0 ? <MenuItem value=""><CircularProgress size={20} /></MenuItem> :
+                  departments.map((d) => <MenuItem key={d.id} value={d.id}>{d.departmentName}</MenuItem>)
+                }
               </Select>
             </FormControl>
             <Button variant="contained" onClick={handleAdd}>Submit</Button>
@@ -221,12 +224,7 @@ export default function PositionsPage() {
         <Box sx={modalStyle}>
           <Typography variant="h6">Edit Position</Typography>
           <Stack spacing={2} mt={2}>
-            <TextField
-              label="Position Name"
-              value={positionData.positionName}
-              onChange={(e) => setPositionData({ ...positionData, positionName: e.target.value })}
-              fullWidth
-            />
+            <TextField label="Position Name" value={positionData.positionName} onChange={(e) => setPositionData({ ...positionData, positionName: e.target.value })} fullWidth />
             <FormControl fullWidth>
               <InputLabel id="department-select-label-edit">Department</InputLabel>
               <Select
@@ -235,17 +233,9 @@ export default function PositionsPage() {
                 onChange={(e) => setPositionData({ ...positionData, departmentId: Number(e.target.value) })}
                 label="Department"
               >
-                {departments.length === 0 ? (
-                  <MenuItem value="">
-                    <CircularProgress size={20} />
-                  </MenuItem>
-                ) : (
-                  departments.map((d) => (
-                    <MenuItem key={d.id} value={d.id}>
-                      {d.departmentName}
-                    </MenuItem>
-                  ))
-                )}
+                {departments.length === 0 ? <MenuItem value=""><CircularProgress size={20} /></MenuItem> :
+                  departments.map((d) => <MenuItem key={d.id} value={d.id}>{d.departmentName}</MenuItem>)
+                }
               </Select>
             </FormControl>
             <Button variant="contained" onClick={handleUpdate}>Update</Button>
@@ -260,12 +250,7 @@ export default function PositionsPage() {
             <Stack spacing={2}>
               <Typography variant="h6">View Position</Typography>
               <TextField label="ID" value={currentPosition.id} disabled fullWidth />
-              <TextField
-                label="Department"
-                value={departmentNames[currentPosition.departmentId] || currentPosition.departmentId}
-                disabled
-                fullWidth
-              />
+              <TextField label="Department" value={departmentNames[currentPosition.departmentId] || currentPosition.departmentId} disabled fullWidth />
               <TextField label="Position Name" value={currentPosition.positionName} disabled fullWidth />
             </Stack>
           )}

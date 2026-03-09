@@ -20,6 +20,10 @@ import {
   IconButton,
   Pagination,
   CircularProgress,
+  Stack,
+  Grid,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import { useLeaveStore, Leave } from "@/app/store/useLeaveType";
@@ -38,6 +42,9 @@ export default function LeaveManagementPage() {
 
   const [page, setPage] = useState(1);
   const rowsPerPage = 5;
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     fetchEmployees();
@@ -83,14 +90,13 @@ export default function LeaveManagementPage() {
     }
   };
 
-  // Pagination logic
+  // Pagination
   const paginatedLeaves = leaves.slice((page - 1) * rowsPerPage, page * rowsPerPage);
   const totalPages = Math.ceil(leaves.length / rowsPerPage);
 
-  // Helper to get employee full name by ID
   const getEmployeeName = (id: number) => {
     const emp = employees.find((e: Employee) => e.id === id);
-    return emp ? `${emp.firstName} ${emp.lastName}` : id;
+    return emp ? `${emp.firstName} ${emp.lastName}` : `ID: ${id}`;
   };
 
   return (
@@ -103,9 +109,8 @@ export default function LeaveManagementPage() {
         Add Leave
       </Button>
 
-      {loading ? (
-        <CircularProgress />
-      ) : (
+      {/* Desktop Table */}
+      {!isMobile && (
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
@@ -144,10 +149,36 @@ export default function LeaveManagementPage() {
         </TableContainer>
       )}
 
+      {/* Mobile Grid */}
+      {isMobile && (
+        <Grid container spacing={2}>
+          {paginatedLeaves.length === 0 ? (
+            <Grid size={[12, 12, 12]}>
+              <Typography align="center">No leaves found</Typography>
+            </Grid>
+          ) : (
+            paginatedLeaves.map((leave) => (
+              <Grid size={[12]} key={leave.id}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="subtitle1">{leave.leaveName}</Typography>
+                  <Typography variant="body2">Created By: {getEmployeeName(leave.createdBy)}</Typography>
+                  <Typography variant="body2">Created At: {leave.createdAt ? format(new Date(leave.createdAt), "PPpp") : "-"}</Typography>
+                  <Typography variant="body2">Updated At: {leave.updatedAt ? format(new Date(leave.updatedAt), "PPpp") : "-"}</Typography>
+                  <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                    <Button size="small" variant="outlined" onClick={() => handleOpenModal(leave)}>Edit</Button>
+                    <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(leave.id!)}>Delete</Button>
+                  </Stack>
+                </Paper>
+              </Grid>
+            ))
+          )}
+        </Grid>
+      )}
+
       {/* Pagination */}
       {totalPages > 1 && (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-          <Pagination count={totalPages} page={page} onChange={(e, value) => setPage(value)} />
+          <Pagination count={totalPages} page={page} onChange={(_, value) => setPage(value)} />
         </Box>
       )}
 

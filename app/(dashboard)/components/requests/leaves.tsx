@@ -20,7 +20,7 @@ import {
   Grid,
   TablePagination,
 } from "@mui/material";
-
+import { useMediaQuery, useTheme } from "@mui/material";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -39,6 +39,8 @@ const modalStyle = {
 };
 
 export default function LeaveRequestPage() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const {
     leaveRequests,
     fetchLeaveRequests,
@@ -210,6 +212,72 @@ export default function LeaveRequestPage() {
       </Grid>
 
       {/* TABLE */}
+      
+    {isMobile ? (
+      <Grid container spacing={2} sx={{ mb: 2 }}>
+        {displayedLeaves.length === 0 ? (
+          <Grid size={[12]}>
+            <Typography align="center">No leave requests found</Typography>
+          </Grid>
+        ) : (
+          displayedLeaves.map((leave) => (
+            <Grid size={[12]} key={leave.id}>
+              <Card>
+                <CardContent>
+                  <Typography variant="subtitle1">Leave ID: {leave.id}</Typography>
+                  <Typography variant="body2">Employee: {leave.employeeId}</Typography>
+                  <Typography variant="body2">Leave Type: {leave.leaveTypeId}</Typography>
+                  <Typography variant="body2">Start Date: {leave.fromDate}</Typography>
+                  <Typography variant="body2">End Date: {leave.toDate}</Typography>
+                  <Typography variant="body2">Total Days: {leave.totalDays}</Typography>
+                  <Typography variant="body2">Status: {leave.status}</Typography>
+
+                  <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
+                    <Button size="small" variant="outlined" onClick={() => handleViewOpen(leave)}>
+                      View
+                    </Button>
+                    {sessionData.roleId === 1 && leave.status === "PENDING" && (
+                      <>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="success"
+                          onClick={() => handleApprove(leave)}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          onClick={() => handleReject(leave)}
+                        >
+                          Deny
+                        </Button>
+                      </>
+                    )}
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))
+        )}
+
+        {/* Optional: Pagination for mobile */}
+        {displayedLeaves.length > rowsPerPage && (
+          <Grid size={[12]} sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+            <TablePagination
+              component="div"
+              count={leaveRequests.length}
+              page={page}
+              onPageChange={(e, newPage) => setPage(newPage)}
+              rowsPerPage={rowsPerPage}
+              rowsPerPageOptions={[rowsPerPage]}
+            />
+          </Grid>
+        )}
+      </Grid>
+    ): (
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -262,7 +330,7 @@ export default function LeaveRequestPage() {
           rowsPerPageOptions={[rowsPerPage]}
         />
       </TableContainer>
-
+    )}
       {/* VIEW MODAL */}
       <Modal open={viewOpen} onClose={handleViewClose}>
         <Box sx={modalStyle}>

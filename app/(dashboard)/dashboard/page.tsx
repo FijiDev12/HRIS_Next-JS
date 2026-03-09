@@ -185,7 +185,7 @@ export default function AttendancePage() {
   if (empError) return <Typography color="error">{empError}</Typography>;
 
   return (
-    <Box sx={{ p: 2, position: "relative" }}>
+    <Box sx={{ p: 2, }}>
       <ToastContainer />
       <Backdrop open={loadingAction} sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <CircularProgress color="inherit" />
@@ -195,7 +195,7 @@ export default function AttendancePage() {
 
       {/* Summary Cards */}
       <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid size={[4, 4, 4]}>
+        <Grid size={[12, 4, 4]}>
           <Card sx={{ textAlign: "center" }}>
             <CardContent>
               <Typography variant="subtitle2" color="textSecondary">Employee No</Typography>
@@ -203,7 +203,7 @@ export default function AttendancePage() {
             </CardContent>
           </Card>
         </Grid>
-        <Grid size={[4, 4, 4]}>
+        <Grid size={[12, 4, 4]}>
           <Card sx={{ textAlign: "center" }}>
             <CardContent>
               <Typography variant="subtitle2" color="textSecondary">Department ID</Typography>
@@ -211,7 +211,7 @@ export default function AttendancePage() {
             </CardContent>
           </Card>
         </Grid>
-        <Grid size={[4, 4, 4]}>
+        <Grid size={[12, 4, 4]}>
           <Card sx={{ textAlign: "center" }}>
             <CardContent>
               <Typography variant="subtitle2" color="textSecondary">Status</Typography>

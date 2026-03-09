@@ -20,12 +20,15 @@ import {
   Modal,
   Stack,
 } from "@mui/material";
+import { useTheme, useMediaQuery } from "@mui/material";
 import { useSiteStore } from "@/app/store/useSites";
 import { useTimelogStore, Timelog } from "@/app/store/useTimelogs";
 import { toast } from "react-toastify";
 import Image from "next/image";
 
 export default function TimelogFilterTable() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // <=600px
   const { sites, fetchSites } = useSiteStore();
   const timelogStore = useTimelogStore();
 
@@ -76,12 +79,12 @@ export default function TimelogFilterTable() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" sx={{ color: 'gray' }} gutterBottom>
         Daily Time Record by Site
       </Typography>
 
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid size={[4,4,4]}>
+        <Grid size={[12,4,4]}>
           <FormControl fullWidth>
             <Select
               value={selectedSite}
@@ -98,7 +101,7 @@ export default function TimelogFilterTable() {
           </FormControl>
         </Grid>
 
-        <Grid size={[4,4,4]}>
+        <Grid size={[12,4,4]}>
           <TextField
             type="date"
             label="Date From"
@@ -109,7 +112,7 @@ export default function TimelogFilterTable() {
           />
         </Grid>
 
-        <Grid size={[4,4,4]}>
+        <Grid size={[12,4,4]}>
           <TextField
             type="date"
             label="Date To"
@@ -120,7 +123,7 @@ export default function TimelogFilterTable() {
           />
         </Grid>
 
-        <Grid size={[4,4,4]}>
+        <Grid size={[12,4,4]}>
           <Button
             variant="contained"
             color="primary"
@@ -131,61 +134,112 @@ export default function TimelogFilterTable() {
           </Button>
         </Grid>
       </Grid>
-<Paper>
-  <Table>
-    <TableHead>
-      <TableRow>
-        <TableCell>ID</TableCell>
-        <TableCell>Employee No</TableCell>
-        <TableCell>Log Date</TableCell>
-        <TableCell>Type</TableCell>
-        <TableCell>Selfie</TableCell>
-      </TableRow>
-    </TableHead>
-    <TableBody>
-      {timelogStore.timelogs.length === 0 ? (
+{isMobile ? (
+  <Stack spacing={2}>
+    {paginatedTimelogs.length === 0 ? (
+      <Typography align="center">
+        No attendance corrections found
+      </Typography>
+    ) : (
+      paginatedTimelogs.map((log, index) => (
+        <Paper
+          key={log.id ?? index}
+          sx={{
+            p: 2,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            cursor: "pointer",
+          }}
+          onClick={() => handleRowClick(log)}
+        >
+          <Stack>
+            <Typography fontWeight="bold">
+              ID: {log.id}
+            </Typography>
+            <Typography>
+              Employee: {log.employeeId}
+            </Typography>
+            <Typography variant="body2">
+              {log.logDate}
+            </Typography>
+          </Stack>
+
+          <Button variant="contained" size="small">
+            View
+          </Button>
+        </Paper>
+      ))
+    )}
+
+    <TablePagination
+      component="div"
+      count={timelogStore.timelogs.length}
+      page={page}
+      onPageChange={handleChangePage}
+      rowsPerPage={rowsPerPage}
+      onRowsPerPageChange={handleChangeRowsPerPage}
+      rowsPerPageOptions={[5, 10, 25, 50]}
+    />
+  </Stack>
+) : (
+  <Paper>
+    <Table>
+      <TableHead>
         <TableRow>
-          <TableCell colSpan={5} align="center">
-            No attendance corrections found
-          </TableCell>
+          <TableCell>ID</TableCell>
+          <TableCell>Employee No</TableCell>
+          <TableCell>Log Date</TableCell>
+          <TableCell>Type</TableCell>
+          <TableCell>Selfie</TableCell>
         </TableRow>
-      ) : (
-        paginatedTimelogs.map((log, index) => (
-          <TableRow
-            key={log.id ?? index}
-            hover
-            sx={{ cursor: "pointer" }}
-            onClick={() => handleRowClick(log)}
-          >
-            <TableCell>{log.id}</TableCell>
-            <TableCell>{log.employeeId}</TableCell>
-            <TableCell>{log.logDate}</TableCell>
-            <TableCell>{log.type}</TableCell>
-            <TableCell>
-              {log.selfie && (
-                <img
-                  src=
-                  {`data:image/jpeg;base64,${Buffer.from(log.selfie)}`}
-                  height={20}
-                />
-              )}
+      </TableHead>
+
+      <TableBody>
+        {paginatedTimelogs.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={5} align="center">
+              No attendance corrections found
             </TableCell>
           </TableRow>
-        ))
-      )}
-    </TableBody>
-  </Table>
+        ) : (
+          paginatedTimelogs.map((log, index) => (
+            <TableRow
+              key={log.id ?? index}
+              hover
+              sx={{ cursor: "pointer" }}
+              onClick={() => handleRowClick(log)}
+            >
+              <TableCell>{log.id}</TableCell>
+              <TableCell>{log.employeeId}</TableCell>
+              <TableCell>{log.logDate}</TableCell>
+              <TableCell>{log.type}</TableCell>
 
-  <TablePagination
-    component="div"
-    count={timelogStore.timelogs.length}
-    page={page}
-    onPageChange={handleChangePage}
-    rowsPerPage={rowsPerPage}
-    onRowsPerPageChange={handleChangeRowsPerPage}
-    rowsPerPageOptions={[5, 10, 25, 50]}
-  />
-</Paper>
+              <TableCell>
+                {log.selfie && (
+                  <img
+                    src={`data:image/jpeg;base64,${Buffer.from(log.selfie)}`}
+                    height={20}
+                  />
+                )}
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+
+    <TablePagination
+      component="div"
+      count={timelogStore.timelogs.length}
+      page={page}
+      onPageChange={handleChangePage}
+      rowsPerPage={rowsPerPage}
+      onRowsPerPageChange={handleChangeRowsPerPage}
+      rowsPerPageOptions={[5, 10, 25, 50]}
+    />
+  </Paper>
+)}
 
       {/* Modal */}
       <Modal

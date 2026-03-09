@@ -3,8 +3,6 @@
 import React, { useEffect, useState } from "react";
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Table,
   TableBody,
@@ -18,10 +16,12 @@ import {
   TextField,
   Stack,
   TablePagination,
+  Grid,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
 import { useEmploymentStatusStore, EmploymentStatus } from "@/app/store/useEmployeeType";
 
 const modalStyle = {
@@ -37,13 +37,8 @@ const modalStyle = {
 };
 
 export default function EmploymentStatusPage() {
-  const {
-    employmentStatuses,
-    fetchEmploymentStatuses,
-    createEmploymentStatus,
-    updateEmploymentStatus,
-    deleteEmploymentStatus,
-  } = useEmploymentStatusStore();
+  const { employmentStatuses, fetchEmploymentStatuses, createEmploymentStatus, updateEmploymentStatus, deleteEmploymentStatus } =
+    useEmploymentStatusStore();
 
   const [viewOpen, setViewOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -53,7 +48,9 @@ export default function EmploymentStatusPage() {
   const [currentStatus, setCurrentStatus] = useState<EmploymentStatus | null>(null);
   const [newStatus, setNewStatus] = useState<EmploymentStatus>({ employmentType: "", createdBy: 1 });
 
-  // Fetch data on mount
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   useEffect(() => {
     fetchEmploymentStatuses();
   }, []);
@@ -130,49 +127,77 @@ export default function EmploymentStatusPage() {
         <Button variant="contained" onClick={() => handleEditOpen(null)}>Add Status</Button>
       </Stack>
 
-      {/* TABLE */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Employment Type</TableCell>
-              <TableCell>Created By</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {displayedStatuses.length === 0 ? (
+      {/* DESKTOP TABLE */}
+      {!isMobile && (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={4} align="center">No employment statuses found</TableCell>
+                <TableCell>ID</TableCell>
+                <TableCell>Employment Type</TableCell>
+                <TableCell>Created By</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
-            ) : (
-              displayedStatuses.map((status) => (
-                <TableRow key={status.id}>
-                  <TableCell>{status.id}</TableCell>
-                  <TableCell>{status.employmentType}</TableCell>
-                  <TableCell>{status.createdBy}</TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={1}>
-                      <Button size="small" variant="outlined" onClick={() => handleViewOpen(status)}>View</Button>
-                      <Button size="small" variant="contained" onClick={() => handleEditOpen(status)}>Edit</Button>
-                      <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(status.id!)}>Delete</Button>
-                    </Stack>
-                  </TableCell>
+            </TableHead>
+            <TableBody>
+              {displayedStatuses.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">No employment statuses found</TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        <TablePagination
-          component="div"
-          count={employmentStatuses.length}
-          page={page}
-          onPageChange={(e, newPage) => setPage(newPage)}
-          rowsPerPage={rowsPerPage}
-          rowsPerPageOptions={[rowsPerPage]}
-        />
-      </TableContainer>
+              ) : (
+                displayedStatuses.map((status) => (
+                  <TableRow key={status.id}>
+                    <TableCell>{status.id}</TableCell>
+                    <TableCell>{status.employmentType}</TableCell>
+                    <TableCell>{status.createdBy}</TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={1}>
+                        <Button size="small" variant="outlined" onClick={() => handleViewOpen(status)}>View</Button>
+                        <Button size="small" variant="contained" onClick={() => handleEditOpen(status)}>Edit</Button>
+                        <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(status.id!)}>Delete</Button>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+          <TablePagination
+            component="div"
+            count={employmentStatuses.length}
+            page={page}
+            onPageChange={(e, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[rowsPerPage]}
+          />
+        </TableContainer>
+      )}
+
+      {/* MOBILE GRID */}
+      {isMobile && (
+        <Grid container spacing={2}>
+          {employmentStatuses.length === 0 ? (
+            <Grid size={[12, 12, 12]}>
+              <Typography align="center">No employment statuses found</Typography>
+            </Grid>
+          ) : (
+            employmentStatuses.map((status) => (
+              <Grid size={[12]} key={status.id}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="subtitle1">{status.employmentType}</Typography>
+                  <Typography variant="body2">ID: {status.id}</Typography>
+                  <Typography variant="body2">Created By: {status.createdBy}</Typography>
+                  <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                    <Button size="small" variant="outlined" onClick={() => handleViewOpen(status)}>View</Button>
+                    <Button size="small" variant="contained" onClick={() => handleEditOpen(status)}>Edit</Button>
+                    <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(status.id!)}>Delete</Button>
+                  </Stack>
+                </Paper>
+              </Grid>
+            ))
+          )}
+        </Grid>
+      )}
 
       {/* VIEW MODAL */}
       <Modal open={viewOpen} onClose={handleViewClose}>
@@ -201,7 +226,7 @@ export default function EmploymentStatusPage() {
               fullWidth
             />
             <TextField
-                sx={{ display: 'none' }}
+              sx={{ display: 'none' }}
               label="Created By"
               type="number"
               value={newStatus.createdBy}

@@ -21,6 +21,8 @@ import {
   MenuItem,
   TextField,
   Grid,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { useEmployeeStore } from "@/app/store/useEmployee";
 import { useScheduleStore } from "@/app/store/useSchedule";
@@ -54,29 +56,48 @@ function EmployeeShiftsModal({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Employee Shifts</DialogTitle>
-      <DialogContent>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Date</TableCell>
-                <TableCell>Shift Name</TableCell>
-                <TableCell>Start Time</TableCell>
-                <TableCell>End Time</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {shifts.map((shift) => (
-                <TableRow key={shift.id}>
-                  <TableCell>{new Date(shift.workDate).toLocaleDateString()}</TableCell>
-                  <TableCell>{shift.shift?.shiftName}</TableCell>
-                  <TableCell>{shift.shift?.startTime}</TableCell>
-                  <TableCell>{shift.shift?.endTime}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+      <DialogContent dividers>
+        {shifts.length === 0 ? (
+          <Typography>No shifts found.</Typography>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {shifts.map((shift) => (
+              <Paper
+                key={shift.id}
+                sx={{ p: 2, borderRadius: 2, boxShadow: 1 }}
+                elevation={2}
+              >
+                <Typography variant="subtitle2" color="text.secondary">
+                  Date
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {new Date(shift.workDate).toLocaleDateString()}
+                </Typography>
+
+                <Typography variant="subtitle2" color="text.secondary">
+                  Shift Name
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {shift.shift?.shiftName || "-"}
+                </Typography>
+
+                <Typography variant="subtitle2" color="text.secondary">
+                  Start Time
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {shift.shift?.startTime || "-"}
+                </Typography>
+
+                <Typography variant="subtitle2" color="text.secondary">
+                  End Time
+                </Typography>
+                <Typography variant="body1">
+                  {shift.shift?.endTime || "-"}
+                </Typography>
+              </Paper>
+            ))}
+          </div>
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
@@ -93,9 +114,9 @@ function AssignShiftModal({
 }: {
   open: boolean;
   onClose: () => void;
-  preselectedEmployeeId?: number; // optional pre-fill
+  preselectedEmployeeId?: number;
 }) {
-  const { employees } = useEmployeeStore(); // array of {id, fullName}
+  const { employees } = useEmployeeStore();
   const { schedules, fetchSchedules } = useScheduleStore();
   const { assignShift, fetchEmployeeShifts } = useEmployeeStore();
 
@@ -123,14 +144,8 @@ function AssignShiftModal({
   const handleAssign = async () => {
     if (!employeeId || !shiftId || !startDate || !endDate) return;
 
-    await assignShift({
-      employeeId,
-      shiftId,
-      startDate,
-      endDate,
-    });
-
-    await fetchEmployeeShifts(); // refresh table
+    await assignShift({ employeeId, shiftId, startDate, endDate });
+    await fetchEmployeeShifts();
     onClose();
     setShiftId("");
   };
@@ -140,7 +155,6 @@ function AssignShiftModal({
       <DialogTitle>Assign Shift</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} sx={{ mb: 4 }}>
-          {/* Employee dropdown */}
           <Grid size={[12, 12, 12]}>
             <FormControl fullWidth>
               <InputLabel id="employee-label">Employee</InputLabel>
@@ -151,14 +165,13 @@ function AssignShiftModal({
               >
                 {employees.map((emp) => (
                   <MenuItem key={emp.id} value={emp.id}>
-                    {emp.firstName} {/* Show full name */}
+                    {emp.firstName}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
 
-          {/* Shift dropdown */}
           <Grid size={[12, 12, 12]}>
             <FormControl fullWidth>
               <InputLabel id="shift-label">Shift</InputLabel>
@@ -176,7 +189,6 @@ function AssignShiftModal({
             </FormControl>
           </Grid>
 
-          {/* Start date */}
           <Grid size={[6, 6, 6]}>
             <TextField
               label="Start Date"
@@ -188,7 +200,6 @@ function AssignShiftModal({
             />
           </Grid>
 
-          {/* End date */}
           <Grid size={[6, 6, 6]}>
             <TextField
               label="End Date"
@@ -222,6 +233,9 @@ export default function EmployeeShiftTab({ employeeId }: EmployeeShiftTabProps) 
   const [openAssignModal, setOpenAssignModal] = useState(false);
   const [selectedEmployeeShifts, setSelectedEmployeeShifts] = useState<EmployeeShift[]>([]);
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   useEffect(() => {
     fetchEmployeeShifts();
   }, []);
@@ -238,58 +252,91 @@ export default function EmployeeShiftTab({ employeeId }: EmployeeShiftTabProps) 
 
   return (
     <div>
-      {/* Header with Assign Shift button */}
+      {/* Header */}
       <Grid container spacing={2} sx={{ mb: 4 }}>
         <Grid size={[6, 6, 6]}>
           <Typography variant="h6">Employee Shifts</Typography>
         </Grid>
-        <Grid size={[6, 6, 6]} style={{ textAlign: "right" }}>
+        <Grid size={[6, 6, 6]} sx={{ textAlign: "right" }}>
           <Button variant="contained" onClick={() => setOpenAssignModal(true)}>
             Assign Shift
           </Button>
         </Grid>
       </Grid>
 
-      {/* Employee Shifts Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Employee ID</TableCell>
-              <TableCell>Shift Name</TableCell>
-              <TableCell>Start Time</TableCell>
-              <TableCell>End Time</TableCell>
-              <TableCell>Action</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {uniqueEmployeeIds.length === 0 ? (
+      {/* Desktop Table */}
+      {!isMobile && (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={5} align="center">
-                  No shifts assigned
-                </TableCell>
+                <TableCell>Employee ID</TableCell>
+                <TableCell>Shift Name</TableCell>
+                <TableCell>Start Time</TableCell>
+                <TableCell>End Time</TableCell>
+                <TableCell>Action</TableCell>
               </TableRow>
-            ) : (
-              uniqueEmployeeIds.map((id) => {
-                const firstShift = employeeShifts.find((s) => s.employeeId === id);
-                return (
-                  <TableRow key={id}>
-                    <TableCell>{id}</TableCell>
-                    <TableCell>{firstShift?.shift?.shiftName}</TableCell>
-                    <TableCell>{firstShift?.shift?.startTime}</TableCell>
-                    <TableCell>{firstShift?.shift?.endTime}</TableCell>
-                    <TableCell>
-                      <Button variant="outlined" onClick={() => handleOpenViewModal(id)}>
-                        View All
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {uniqueEmployeeIds.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    No shifts assigned
+                  </TableCell>
+                </TableRow>
+              ) : (
+                uniqueEmployeeIds.map((id) => {
+                  const firstShift = employeeShifts.find((s) => s.employeeId === id);
+                  return (
+                    <TableRow key={id}>
+                      <TableCell>{id}</TableCell>
+                      <TableCell>{firstShift?.shift?.shiftName}</TableCell>
+                      <TableCell>{firstShift?.shift?.startTime}</TableCell>
+                      <TableCell>{firstShift?.shift?.endTime}</TableCell>
+                      <TableCell>
+                        <Button variant="outlined" onClick={() => handleOpenViewModal(id)}>
+                          View All
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      {/* Mobile Grid (size preserved) */}
+      {isMobile && (
+        <Grid container spacing={2}>
+          {uniqueEmployeeIds.length === 0 ? (
+            <Grid size={[12, 12, 12]}>
+              <Typography align="center">No shifts assigned</Typography>
+            </Grid>
+          ) : (
+            uniqueEmployeeIds.map((id) => {
+              const firstShift = employeeShifts.find((s) => s.employeeId === id);
+              return (
+                <Grid size={[12]} key={id}>
+                  <Paper
+                    sx={{ p: 2, cursor: "pointer" }}
+                    onClick={() => handleOpenViewModal(id)}
+                    elevation={3}
+                  >
+                    <Typography>Employee ID: {id}</Typography>
+                    <Typography>Shift: {firstShift?.shift?.shiftName}</Typography>
+                    <Typography>
+                      Time: {firstShift?.shift?.startTime} - {firstShift?.shift?.endTime}
+                    </Typography>
+                    <Typography variant="caption">Tap for full schedule</Typography>
+                  </Paper>
+                </Grid>
+              );
+            })
+          )}
+        </Grid>
+      )}
 
       {/* Modals */}
       <EmployeeShiftsModal
@@ -301,7 +348,7 @@ export default function EmployeeShiftTab({ employeeId }: EmployeeShiftTabProps) 
       <AssignShiftModal
         open={openAssignModal}
         onClose={() => setOpenAssignModal(false)}
-        preselectedEmployeeId={employeeId} // pre-fill employee
+        preselectedEmployeeId={employeeId}
       />
     </div>
   );

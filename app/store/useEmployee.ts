@@ -107,7 +107,7 @@ export const useEmployeeStore = create<EmployeeState>((set, get) => ({
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      set({ employees: res.data.data, loading: false });
+      set({ employees: Array.isArray(res.data.data) ? res.data.data : [res.data.data], loading: false });
     } catch (err: any) {
       set({
         loading: false,

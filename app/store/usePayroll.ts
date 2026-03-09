@@ -65,7 +65,7 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
       toast.success(res.data?.message || "Payroll generated successfully");
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Failed to generate payroll";
-      toast.error(errorMsg);
+    //   toast.error(errorMsg);
       set({ error: errorMsg });
     } finally {
       set({ loading: false });
@@ -83,7 +83,7 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
       set({ payrolls: res.data?.data || [] });
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Failed to fetch payroll";
-      toast.error(errorMsg);
+    //   toast.error(errorMsg);
       set({ error: errorMsg });
     } finally {
       set({ loading: false });
@@ -101,7 +101,7 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
       toast.success(res.data?.message || "Payroll approved successfully");
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Failed to approve payroll";
-      toast.error(errorMsg);
+    //   toast.error(errorMsg);
       set({ error: errorMsg });
     } finally {
       set({ loading: false });
@@ -119,7 +119,7 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
       toast.success(res.data?.message || "Payroll unlocked successfully");
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Failed to unlock payroll";
-      toast.error(errorMsg);
+    //   toast.error(errorMsg);
       set({ error: errorMsg });
     } finally {
       set({ loading: false });
@@ -137,7 +137,7 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
       toast.success("Payroll deleted successfully");
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Failed to delete payroll";
-      toast.error(errorMsg);
+    //   toast.error(errorMsg);
       set({ error: errorMsg });
     } finally {
       set({ loading: false });
@@ -155,7 +155,7 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
       toast.success("Payroll reversed successfully");
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Failed to reverse payroll";
-      toast.error(errorMsg);
+    //   toast.error(errorMsg);
       set({ error: errorMsg });
     } finally {
       set({ loading: false });
@@ -174,7 +174,7 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
       get().fetchPeriods();
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Failed to create payroll period";
-      toast.error(errorMsg);
+    //   toast.error(errorMsg);
       set({ error: errorMsg });
     } finally {
       set({ loading: false });
@@ -193,7 +193,7 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
       get().fetchPeriods();
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Failed to post payroll period";
-      toast.error(errorMsg);
+    //   toast.error(errorMsg);
       set({ error: errorMsg });
     } finally {
       set({ loading: false });
@@ -213,7 +213,7 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
       
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Failed to delete payroll period";
-      toast.error(errorMsg);
+    //   toast.error(errorMsg);
       set({ error: errorMsg });
     } finally {
       set({ loading: false });
@@ -231,7 +231,7 @@ export const usePayrollStore = create<PayrollState>((set, get) => ({
       set({ periods: res.data?.data || [] });
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Failed to fetch payroll periods";
-      toast.error(errorMsg);
+    //   toast.error(errorMsg);
       set({ error: errorMsg });
     } finally {
       set({ loading: false });

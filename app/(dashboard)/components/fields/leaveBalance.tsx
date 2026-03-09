@@ -18,6 +18,9 @@ import {
   MenuItem,
   Stack,
   Pagination,
+  Grid,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { toast } from "react-toastify";
 
@@ -50,12 +53,15 @@ export default function LeaveBalancePage() {
   const [editingBalance, setEditingBalance] = useState<LeaveBalance | null>(null);
   const [form, setForm] = useState<LeaveBalance>({
     employeeId: 0,
-    leaveTypeId: 0, // start empty
+    leaveTypeId: 0,
     totalDays: 0,
     remainingDays: 0,
   });
 
-  // Fetch data on mount
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // Fetch data
   useEffect(() => {
     fetchEmployees();
     fetchAllBalances();
@@ -98,7 +104,6 @@ export default function LeaveBalancePage() {
     }
   };
 
-  // Pagination
   const totalPages = Math.ceil(balances.length / rowsPerPage);
   const displayedBalances = balances.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
@@ -116,67 +121,82 @@ export default function LeaveBalancePage() {
     <Box sx={{ p: 2 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h4">Leave Balances</Typography>
-        <Button variant="contained" onClick={() => handleOpenModal()}>
-          Add Balance
-        </Button>
+        <Button variant="contained" onClick={() => handleOpenModal()}>Add Balance</Button>
       </Stack>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Employee</TableCell>
-              <TableCell>Leave Type</TableCell>
-              <TableCell>Total Days</TableCell>
-              <TableCell>Remaining Days</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {displayedBalances.length === 0 ? (
+      {/* Desktop Table */}
+      {!isMobile && (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={5} align="center">
-                  No data available
-                </TableCell>
+                <TableCell>Employee</TableCell>
+                <TableCell>Leave Type</TableCell>
+                <TableCell>Total Days</TableCell>
+                <TableCell>Remaining Days</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
-            ) : (
-              displayedBalances.map((balance) => (
-                <TableRow key={balance.id}>
-                  <TableCell>{getEmployeeName(balance.employeeId)}</TableCell>
-                  <TableCell>{getLeaveName(balance.leaveTypeId)}</TableCell>
-                  <TableCell>{balance.totalDays}</TableCell>
-                  <TableCell>{balance.remainingDays}</TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={1}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleOpenModal(balance)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        color="error"
-                        onClick={() => handleDelete(balance.id!)}
-                      >
-                        Delete
-                      </Button>
-                    </Stack>
+            </TableHead>
+            <TableBody>
+              {displayedBalances.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    No data available
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              ) : (
+                displayedBalances.map((balance) => (
+                  <TableRow key={balance.id}>
+                    <TableCell>{getEmployeeName(balance.employeeId)}</TableCell>
+                    <TableCell>{getLeaveName(balance.leaveTypeId)}</TableCell>
+                    <TableCell>{balance.totalDays}</TableCell>
+                    <TableCell>{balance.remainingDays}</TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={1}>
+                        <Button size="small" variant="outlined" onClick={() => handleOpenModal(balance)}>Edit</Button>
+                        <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(balance.id!)}>Delete</Button>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
+      {/* Mobile Grid */}
+      {isMobile && (
+        <Grid container spacing={2}>
+          {balances.length === 0 ? (
+            <Grid size={[12, 12, 12]}>
+              <Typography align="center">No data available</Typography>
+            </Grid>
+          ) : (
+            displayedBalances.map((balance) => (
+              <Grid size={[12]} key={balance.id}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="subtitle1">{getEmployeeName(balance.employeeId)}</Typography>
+                  <Typography variant="body2">Leave Type: {getLeaveName(balance.leaveTypeId)}</Typography>
+                  <Typography variant="body2">Total Days: {balance.totalDays}</Typography>
+                  <Typography variant="body2">Remaining Days: {balance.remainingDays}</Typography>
+                  <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                    <Button size="small" variant="outlined" onClick={() => handleOpenModal(balance)}>Edit</Button>
+                    <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(balance.id!)}>Delete</Button>
+                  </Stack>
+                </Paper>
+              </Grid>
+            ))
+          )}
+        </Grid>
+      )}
+
+      {/* Pagination */}
       <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
         <Pagination count={totalPages} page={page} onChange={(_, value) => setPage(value)} />
       </Box>
 
-      {/* MODAL */}
+      {/* Modal */}
       <Modal open={modalOpen} onClose={handleCloseModal}>
         <Box sx={modalStyle}>
           <Typography variant="h6" mb={2}>
@@ -189,9 +209,7 @@ export default function LeaveBalancePage() {
             >
               <MenuItem value="">Select Employee</MenuItem>
               {employees.map((e) => (
-                <MenuItem key={e.id} value={e.id}>
-                  {e.firstName} {e.lastName}
-                </MenuItem>
+                <MenuItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</MenuItem>
               ))}
             </Select>
 
@@ -201,9 +219,7 @@ export default function LeaveBalancePage() {
             >
               <MenuItem value="">Select Leave Type</MenuItem>
               {leaves.map((l) => (
-                <MenuItem key={l.id} value={l.id}>
-                  {l.leaveName}
-                </MenuItem>
+                <MenuItem key={l.id} value={l.id}>{l.leaveName}</MenuItem>
               ))}
             </Select>
 
@@ -211,24 +227,18 @@ export default function LeaveBalancePage() {
               label="Total Days"
               type="number"
               value={form.totalDays || ""}
-              onChange={(e) =>
-                handleFormChange("totalDays", e.target.value ? Number(e.target.value) : 0)
-              }
+              onChange={(e) => handleFormChange("totalDays", Number(e.target.value))}
             />
             <TextField
               label="Remaining Days"
               type="number"
               value={form.remainingDays || ""}
-              onChange={(e) =>
-                handleFormChange("remainingDays", e.target.value ? Number(e.target.value) : 0)
-              }
+              onChange={(e) => handleFormChange("remainingDays", Number(e.target.value))}
             />
 
             <Stack direction="row" justifyContent="flex-end" spacing={1}>
               <Button onClick={handleCloseModal}>Cancel</Button>
-              <Button variant="contained" onClick={handleSubmit}>
-                {editingBalance ? "Update" : "Add"}
-              </Button>
+              <Button variant="contained" onClick={handleSubmit}>{editingBalance ? "Update" : "Add"}</Button>
             </Stack>
           </Stack>
         </Box>

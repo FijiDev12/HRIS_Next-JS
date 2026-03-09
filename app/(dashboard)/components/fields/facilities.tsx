@@ -20,12 +20,15 @@ import {
   Grid,
   CircularProgress,
   Alert,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 
 import { useSiteStore } from "@/app/store/useSites";
 import { useAuthStore } from "@/app/store/useAuth";
-import { useEmployeeStore } from "@/app/store/useEmployee"; // ✅ Import employee store
+import { useEmployeeStore } from "@/app/store/useEmployee";
 import { useEmployeeInfoStore } from "@/app/store/useEmployeeInfo";
+
 const modalStyle = {
   position: "absolute" as const,
   top: "50%",
@@ -39,7 +42,7 @@ const modalStyle = {
 
 export default function FacilitiesPage() {
   const { user } = useAuthStore();
-
+  const { employee } = useEmployeeInfoStore();
   const {
     sites,
     loading,
@@ -52,24 +55,22 @@ export default function FacilitiesPage() {
   } = useSiteStore();
 
   const { fetchEmployeeById } = useEmployeeStore();
-const { employee } = useEmployeeInfoStore();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit" | "view">("create");
   const [form, setForm] = useState<any>(null);
-  const [creators, setCreators] = useState<Record<number, string>>({}); // id → full name
+  const [creators, setCreators] = useState<Record<number, string>>({});
   const [loadingCreators, setLoadingCreators] = useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   /* =========================
      Fetch Sites & Creators
   ========================= */
   useEffect(() => {
-    const loadSites = async () => {
-      await fetchSites();
-    };
-    loadSites();
+    fetchSites();
   }, [fetchSites]);
 
-  // Fetch creators only when sites change, but don’t call fetchSites again
   useEffect(() => {
     const loadCreators = async () => {
       setLoadingCreators(true);
@@ -89,9 +90,7 @@ const { employee } = useEmployeeInfoStore();
       setLoadingCreators(false);
     };
 
-    if (sites.length > 0) {
-      loadCreators();
-    }
+    if (sites.length > 0) loadCreators();
   }, [sites, fetchEmployeeById]);
 
   /* =========================
@@ -101,10 +100,7 @@ const { employee } = useEmployeeInfoStore();
     clearError();
 
     if (type === "create") {
-      setForm({
-        siteName: "",
-        createdBy: user?.id,
-      });
+      setForm({ siteName: "", createdBy: user?.id });
     } else {
       setForm(site);
     }
@@ -119,10 +115,7 @@ const { employee } = useEmployeeInfoStore();
   };
 
   const handleChange = (field: string, value: string) => {
-    setForm((prev: any) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setForm((prev: any) => ({ ...prev, [field]: value }));
   };
 
   /* =========================
@@ -132,15 +125,9 @@ const { employee } = useEmployeeInfoStore();
     if (!form?.siteName?.trim() && !employee) return;
 
     if (mode === "edit" && form?.id) {
-      await updateSite(form.id, {
-        siteName: form.siteName,
-        createdBy: form.createdBy,
-      });
+      await updateSite(form.id, { siteName: form.siteName, createdBy: form.createdBy });
     } else {
-      await createSite({
-        siteName: form.siteName,
-        createdBy: employee?.id ? employee?.id : 1,
-      });
+      await createSite({ siteName: form.siteName, createdBy: employee?.id ?? 1 });
     }
 
     handleClose();
@@ -161,7 +148,6 @@ const { employee } = useEmployeeInfoStore();
         Facilities
       </Typography>
 
-      {/* Error */}
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
@@ -183,9 +169,7 @@ const { employee } = useEmployeeInfoStore();
           <Card>
             <CardContent>
               <Typography variant="h6">Unique Names</Typography>
-              <Typography variant="h4">
-                {new Set(sites.map((s) => s.siteName)).size}
-              </Typography>
+              <Typography variant="h4">{new Set(sites.map((s) => s.siteName)).size}</Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -207,83 +191,97 @@ const { employee } = useEmployeeInfoStore();
         </Button>
       </Box>
 
-      {/* Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Site Name</TableCell>
-              <TableCell>Created By</TableCell>
-              <TableCell>Created At</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-            {loading || loadingCreators ? (
+      {/* Desktop Table */}
+      {!isMobile && (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={5} align="center">
-                  <CircularProgress />
-                </TableCell>
+                <TableCell>ID</TableCell>
+                <TableCell>Site Name</TableCell>
+                <TableCell>Created By</TableCell>
+                <TableCell>Created At</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
-            ) : sites.length > 0 ? (
-              sites.map((site) => (
-                <TableRow key={site.id}>
-                  <TableCell>{site.id}</TableCell>
-                  <TableCell>{site.siteName}</TableCell>
-                  <TableCell>
-                    {creators[site.createdBy] || site.createdBy}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(site.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={1}>
-                      <Button size="small" onClick={() => handleOpen(site, "view")}>
-                        View
-                      </Button>
+            </TableHead>
 
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => handleOpen(site, "edit")}
-                      >
-                        Edit
-                      </Button>
-
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        size="small"
-                        onClick={() => handleDelete(site.id)}
-                      >
-                        Delete
-                      </Button>
-                    </Stack>
+            <TableBody>
+              {loading || loadingCreators ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    <CircularProgress />
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} align="center">
-                  No facilities found
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              ) : sites.length > 0 ? (
+                sites.map((site) => (
+                  <TableRow key={site.id}>
+                    <TableCell>{site.id}</TableCell>
+                    <TableCell>{site.siteName}</TableCell>
+                    <TableCell>{creators[site.createdBy] || site.createdBy}</TableCell>
+                    <TableCell>{new Date(site.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={1}>
+                        <Button size="small" onClick={() => handleOpen(site, "view")}>
+                          View
+                        </Button>
+                        <Button variant="contained" size="small" onClick={() => handleOpen(site, "edit")}>
+                          Edit
+                        </Button>
+                        <Button variant="outlined" color="error" size="small" onClick={() => handleDelete(site.id)}>
+                          Delete
+                        </Button>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    No facilities found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      {/* Mobile Grid */}
+      {isMobile && (
+        <Grid container spacing={2}>
+          {sites.length === 0 ? (
+            <Grid size={[12, 12, 12]}>
+              <Typography align="center">No facilities found</Typography>
+            </Grid>
+          ) : (
+            sites.map((site) => (
+              <Grid size={[12]} key={site.id}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="subtitle1">{site.siteName}</Typography>
+                  <Typography variant="body2">ID: {site.id}</Typography>
+                  <Typography variant="body2">Created By: {creators[site.createdBy] || site.createdBy}</Typography>
+                  <Typography variant="body2">
+                    Created At: {new Date(site.createdAt).toLocaleDateString()}
+                  </Typography>
+                  <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                    <Button size="small" onClick={() => handleOpen(site, "view")}>View</Button>
+                    <Button size="small" variant="contained" onClick={() => handleOpen(site, "edit")}>Edit</Button>
+                    <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(site.id)}>
+                      Delete
+                    </Button>
+                  </Stack>
+                </Paper>
+              </Grid>
+            ))
+          )}
+        </Grid>
+      )}
 
       {/* Modal */}
       <Modal open={open} onClose={handleClose}>
         <Box sx={modalStyle}>
           <Typography variant="h6" gutterBottom>
-            {mode === "view"
-              ? "Facility Details"
-              : mode === "edit"
-              ? "Edit Facility"
-              : "Create Facility"}
+            {mode === "view" ? "Facility Details" : mode === "edit" ? "Edit Facility" : "Create Facility"}
           </Typography>
 
           {form && (

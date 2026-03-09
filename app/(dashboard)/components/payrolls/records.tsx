@@ -42,9 +42,15 @@ export default function PayrollRecordsPage() {
 
   useEffect(() => {
     fetchEmployees();
-    // optionally, fetch default payrolls for a period
-    // getPayrollByPeriod(1);
+    
   }, []);
+
+  useEffect(()=>{
+    if(!employees){
+        console.log(employees)
+        getPayrollByPeriod(1);
+    }
+  },[employees])
 
   const handleRowClick = (payroll: any) => {
     setSelectedPayroll(payroll);

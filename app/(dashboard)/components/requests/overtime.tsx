@@ -20,7 +20,7 @@ import {
   Grid,
   TablePagination,
 } from "@mui/material";
-
+import { useMediaQuery, useTheme } from "@mui/material";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -38,7 +38,17 @@ const modalStyle = {
   p: 4,
 };
 
+// -------------------- APPROVE / REJECT PAYLOAD TYPE --------------------
+interface ApproveRejectPayload {
+  approverId: number;
+  remarks: string;
+  employeeId: number;
+  workDate: string;
+}
+
 export default function OTRequestPage() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const {
     otRequests,
     fetchOTRequests,
@@ -161,15 +171,28 @@ export default function OTRequestPage() {
   // -------------------- APPROVE / REJECT --------------------
   const handleApprove = async (ot: OTRequest) => {
     try {
-      await approveOTRequest(ot.id, { approverId: employee?.id || 1, remarks: "APPROVED" });
+      const payload: ApproveRejectPayload = {
+        approverId: employee?.id ?? 1,
+        remarks: "APPROVED",
+        employeeId: ot.employeeId,
+        workDate: ot.workDate,
+      };
+      await approveOTRequest(ot.id, payload);
       toast.success("OT request approved");
     } catch {
       toast.error("Failed to approve OT request");
     }
   };
+
   const handleReject = async (ot: OTRequest) => {
     try {
-      await rejectOTRequest(ot.id, { approverId: employee?.id || 1, remarks: "REJECTED" });
+      const payload: ApproveRejectPayload = {
+        approverId: employee?.id ?? 1,
+        remarks: "REJECTED",
+        employeeId: ot.employeeId,
+        workDate: ot.workDate,
+      };
+      await rejectOTRequest(ot.id, payload);
       toast.success("OT request rejected");
     } catch {
       toast.error("Failed to reject OT request");
@@ -218,7 +241,78 @@ export default function OTRequestPage() {
       </Grid>
 
       {/* TABLE */}
-      <TableContainer component={Paper}>
+
+{isMobile ? (
+  <Grid container spacing={2} sx={{ mb: 2 }}>
+    {displayedOTs.length === 0 ? (
+      <Grid size={[12]}>
+        <Typography align="center">No OT requests found</Typography>
+      </Grid>
+    ) : (
+      displayedOTs.map((ot) => (
+        <Grid size={[12]} key={ot.id}>
+          <Card>
+            <CardContent>
+              <Typography variant="subtitle1">OT ID: {ot.id}</Typography>
+              <Typography variant="body2">Employee: {ot.employeeId}</Typography>
+              <Typography variant="body2">Date: {ot.workDate}</Typography>
+              <Typography variant="body2">Start: {ot.startTime}</Typography>
+              <Typography variant="body2">End: {ot.endTime}</Typography>
+              <Typography variant="body2">Total Minutes: {ot.totalMinutes}</Typography>
+              <Typography variant="body2">Status: {ot.status}</Typography>
+
+              <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => handleViewOpen(ot)}
+                >
+                  View
+                </Button>
+
+                {sessionData.roleId === 1 && ot.status === "PENDING" && (
+                  <>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="success"
+                      onClick={() => handleApprove(ot)}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="error"
+                      onClick={() => handleReject(ot)}
+                    >
+                      Deny
+                    </Button>
+                  </>
+                )}
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+      ))
+    )}
+
+    {/* Optional: Pagination for mobile */}
+    {displayedOTs.length > rowsPerPage && (
+      <Grid size={[12]} sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+        <TablePagination
+          component="div"
+          count={otRequests.length}
+          page={page}
+          onPageChange={(e, newPage) => setPage(newPage)}
+          rowsPerPage={rowsPerPage}
+          rowsPerPageOptions={[rowsPerPage]}
+        />
+      </Grid>
+    )}
+  </Grid>
+):(
+        <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
@@ -251,8 +345,26 @@ export default function OTRequestPage() {
                   <TableCell>
                     <Stack direction="row" spacing={1}>
                       <Button variant="outlined" size="small" onClick={() => handleViewOpen(ot)}>View</Button>
-                      <Button variant="contained" size="small" sx={{ display: sessionData.roleId === 1 ? 'block': 'none' }} color="success" disabled={ot.status !== "PENDING"} onClick={() => handleApprove(ot)}>Approve</Button>
-                      <Button variant="outlined" size="small" sx={{ display: sessionData.roleId === 1 ? 'block': 'none' }} color="error" disabled={ot.status !== "PENDING"} onClick={() => handleReject(ot)}>Deny</Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        sx={{ display: sessionData.roleId === 1 ? 'block': 'none' }}
+                        color="success"
+                        disabled={ot.status !== "PENDING"}
+                        onClick={() => handleApprove(ot)}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        sx={{ display: sessionData.roleId === 1 ? 'block': 'none' }}
+                        color="error"
+                        disabled={ot.status !== "PENDING"}
+                        onClick={() => handleReject(ot)}
+                      >
+                        Deny
+                      </Button>
                     </Stack>
                   </TableCell>
                 </TableRow>
@@ -269,7 +381,7 @@ export default function OTRequestPage() {
           rowsPerPageOptions={[rowsPerPage]}
         />
       </TableContainer>
-
+)}
       {/* VIEW MODAL */}
       <Modal open={viewOpen} onClose={handleViewClose}>
         <Box sx={modalStyle}>

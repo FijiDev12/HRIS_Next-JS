@@ -21,7 +21,7 @@ import {
   MenuItem,
   TablePagination,
 } from "@mui/material";
-
+import { useMediaQuery, useTheme } from "@mui/material";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -45,6 +45,8 @@ const modalStyle = {
 };
 
 export default function AttendanceCorrectionPage() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const {
     attendanceCorrections,
     fetchAttendanceCorrections,
@@ -271,114 +273,184 @@ export default function AttendanceCorrectionPage() {
 
       {/* SUMMARY CARDS */}
     <Grid container spacing={2} sx={{ mb: 4 }}>
-    <Grid size={[4, 4, 4]}>
-        <Card>
-        <CardContent>
-            <Typography variant="h6">Total Requests</Typography>
-            <Typography variant="h4">{totalCount}</Typography>
-        </CardContent>
-        </Card>
-    </Grid>
+      <Grid size={[4, 4, 4]}>
+          <Card>
+          <CardContent>
+              <Typography variant="h6">Total Requests</Typography>
+              <Typography variant="h4">{totalCount}</Typography>
+          </CardContent>
+          </Card>
+      </Grid>
 
-    <Grid size={[4, 4, 4]}>
-        <Card>
-        <CardContent>
-            <Typography variant="h6">Pending</Typography>
-            <Typography variant="h4">{pendingCount}</Typography>
-        </CardContent>
-        </Card>
-    </Grid>
+      <Grid size={[4, 4, 4]}>
+          <Card>
+          <CardContent>
+              <Typography variant="h6">Pending</Typography>
+              <Typography variant="h4">{pendingCount}</Typography>
+          </CardContent>
+          </Card>
+      </Grid>
 
-    <Grid size={[4, 4, 4]}>
-        <Card>
-        <CardContent>
-            <Typography variant="h6">Approved</Typography>
-            <Typography variant="h4">{approvedCount}</Typography>
-        </CardContent>
-        </Card>
-    </Grid>
+      <Grid size={[4, 4, 4]}>
+          <Card>
+          <CardContent>
+              <Typography variant="h6">Approved</Typography>
+              <Typography variant="h4">{approvedCount}</Typography>
+          </CardContent>
+          </Card>
+      </Grid>
     </Grid>
 
       {/* TABLE */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Employee</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Date</TableCell>
-              <TableCell>Corrected Time</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-            {sortedAC?.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} align="center">  No attendance corrections found</TableCell>
-              </TableRow>
-            ) : (
-                sortedAC.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((correction) => (
-                  <TableRow key={correction.id}>
-                    <TableCell>{correction.id}</TableCell>
-                    <TableCell>
+      
+      {isMobile ? (
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          {sortedAC.length === 0 ? (
+            <Grid size={[12]}>
+              <Typography align="center">No attendance corrections found</Typography>
+            </Grid>
+          ) : (
+            sortedAC.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((correction) => (
+              <Grid size={[12]} key={correction.id}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="subtitle1">
                       {correction.employee
                         ? `${correction.employee.firstName} ${correction.employee.lastName}`
                         : correction.employeeNo}
-                    </TableCell>
-                    <TableCell>{correction.type}</TableCell>
-                    <TableCell>{correction.logDate}</TableCell>
-                    <TableCell>{correction.correctedTime}</TableCell>
-                    <TableCell>{correction.status}</TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={1}>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => handleViewOpen(correction)}
-                        >
-                          View
-                        </Button>
-                        <Button
-                          sx={{ display: sessionData.roleId === 1 ? 'block': 'none' }}
-                          variant="contained"
-                          size="small"
-                          color="success"
-                          disabled={correction.status !== "PENDING"}
-                          onClick={() => handleActionOpen(correction, "APPROVE")}
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                        sx={{ display: sessionData.roleId === 1 ? 'block': 'none' }}
-                          variant="outlined"
-                          size="small"
-                          color="error"
-                          disabled={correction.status !== "PENDING"}
-                          onClick={() => handleActionOpen(correction, "REJECT")}
-                        >
-                          Deny
-                        </Button>
-                      </Stack>
-                    </TableCell>
+                    </Typography>
+                    <Typography variant="body2">Type: {correction.type}</Typography>
+                    <Typography variant="body2">Date: {correction.logDate}</Typography>
+                    <Typography variant="body2">Corrected Time: {correction.correctedTime}</Typography>
+                    <Typography variant="body2">Status: {correction.status}</Typography>
+                    <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleViewOpen(correction)}
+                      >
+                        View
+                      </Button>
+                      {sessionData.roleId === 1 && correction.status === "PENDING" && (
+                        <>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            color="success"
+                            onClick={() => handleActionOpen(correction, "APPROVE")}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            onClick={() => handleActionOpen(correction, "REJECT")}
+                          >
+                            Deny
+                          </Button>
+                        </>
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))
+          )}
+          {/* Optional: Pagination for mobile */}
+          {sortedAC.length > rowsPerPage && (
+            <Grid size={[12]} sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              <TablePagination
+                component="div"
+                count={sortedAC.length}
+                page={page}
+                onPageChange={(e, newPage) => setPage(newPage)}
+                rowsPerPage={rowsPerPage}
+                rowsPerPageOptions={[rowsPerPage]}
+              />
+            </Grid>
+          )}
+        </Grid>
+      ):(
+        <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>ID</TableCell>
+                    <TableCell>Employee</TableCell>
+                    <TableCell>Type</TableCell>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Corrected Time</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Actions</TableCell>
                   </TableRow>
-                ))
-              )
-            }
-          </TableBody>
-        </Table>
-        <TablePagination
-          component="div"
-          count={sortedAC.length}
-          page={page}
-          onPageChange={(e, newPage) => setPage(newPage)}
-          rowsPerPage={rowsPerPage}
-          rowsPerPageOptions={[rowsPerPage]}
-        />
-      </TableContainer>
+                </TableHead>
 
+                <TableBody>
+                  {sortedAC?.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center">  No attendance corrections found</TableCell>
+                    </TableRow>
+                  ) : (
+                      sortedAC.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)?.map((correction) => (
+                        <TableRow key={correction.id}>
+                          <TableCell>{correction.id}</TableCell>
+                          <TableCell>
+                            {correction.employee
+                              ? `${correction.employee.firstName} ${correction.employee.lastName}`
+                              : correction.employeeNo}
+                          </TableCell>
+                          <TableCell>{correction.type}</TableCell>
+                          <TableCell>{correction.logDate}</TableCell>
+                          <TableCell>{correction.correctedTime}</TableCell>
+                          <TableCell>{correction.status}</TableCell>
+                          <TableCell>
+                            <Stack direction="row" spacing={1}>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={() => handleViewOpen(correction)}
+                              >
+                                View
+                              </Button>
+                              <Button
+                                sx={{ display: sessionData.roleId === 1 ? 'block': 'none' }}
+                                variant="contained"
+                                size="small"
+                                color="success"
+                                disabled={correction.status !== "PENDING"}
+                                onClick={() => handleActionOpen(correction, "APPROVE")}
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                              sx={{ display: sessionData.roleId === 1 ? 'block': 'none' }}
+                                variant="outlined"
+                                size="small"
+                                color="error"
+                                disabled={correction.status !== "PENDING"}
+                                onClick={() => handleActionOpen(correction, "REJECT")}
+                              >
+                                Deny
+                              </Button>
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )
+                  }
+                </TableBody>
+              </Table>
+              <TablePagination
+                component="div"
+                count={sortedAC.length}
+                page={page}
+                onPageChange={(e, newPage) => setPage(newPage)}
+                rowsPerPage={rowsPerPage}
+                rowsPerPageOptions={[rowsPerPage]}
+              />
+            </TableContainer>
+      )}
       {/* VIEW MODAL */}
       <Modal open={viewOpen} onClose={handleViewClose}>
         <Box sx={modalStyle}>

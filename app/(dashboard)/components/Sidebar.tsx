@@ -8,6 +8,8 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import IconButton from "@mui/material/IconButton";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
 import ViewListIcon from '@mui/icons-material/ViewList';
@@ -21,12 +23,14 @@ import { useLayout } from "../context/LayoutContext";
 import { usePathname } from "next/navigation"; // <--- import this
 import Image from "next/image";
 import { useEffect, useState } from "react";
-
+import { useTheme, useMediaQuery } from "@mui/material";
 
 
 export const Sidebar = () => {
 
-  const { isSidebarCollapsed } = useLayout();
+  const { isSidebarCollapsed, toggleSidebar  } = useLayout();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // <=600px
   const pathname = usePathname(); // get current route
   const [sessionData, setSessionData] = useState<{ roleId?: number; id?: number }>({});
   const menuItems = [
@@ -36,7 +40,7 @@ export const Sidebar = () => {
     { label: "Requests", icon: <SendIcon />, href: "/requests", visibility: false },
     { label: "Calendar", icon: <CalendarMonth />, href: "/calendar", visibility: false },
     { label: "Reports", icon: <Assessment />, href: "/reports", visibility: sessionData?.roleId !== 1 },
-    { label: "Payroll", icon: <ReceiptLongIcon />, href: "/payroll", visibility: sessionData?.roleId !== 1 },
+    { label: "Payroll", icon: <ReceiptLongIcon />, href: "/payroll", visibility: false },
  ];
     useEffect(() => {
     if (typeof window !== "undefined") {
@@ -47,9 +51,12 @@ export const Sidebar = () => {
   return (
     <Box
       sx={{
-        width: isSidebarCollapsed ? 64 : 220,
-        height: "auto",
-        display: "flex",
+        // width: 220,
+        width: !isMobile && isSidebarCollapsed ? 64 : 220,
+        position: isMobile? 'absolute' : 'relative',
+        height: isMobile? '100%' : "auto",
+        zIndex: 10000,
+        display: isMobile && isSidebarCollapsed ? 'none' : 'flex',
         flexDirection: "column",
         transition: "width 0.25s ease",
         bgcolor: "background.paper",
@@ -66,6 +73,9 @@ export const Sidebar = () => {
           justifyContent: "center",
         }}
       >
+        <IconButton onClick={toggleSidebar} size="small" sx={{ display: isMobile ? 'flex' : 'none' }}>
+          <MenuIcon />
+        </IconButton>
         <Image
           src={Logo}
           alt="Logo"
