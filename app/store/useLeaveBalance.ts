@@ -23,6 +23,7 @@ interface LeaveBalanceState {
 
   // Actions
   fetchAllBalances: () => Promise<void>;
+  fetchEmployeeBalances: (employeeId: number) => Promise<void>;
   createBalance: (payload: LeaveBalance) => Promise<void>;
   updateBalance: (id: number, payload: LeaveBalance) => Promise<void>;
   deleteBalance: (id: number) => Promise<void>;
@@ -52,6 +53,26 @@ export const useLeaveBalanceStore = create<LeaveBalanceState>((set, get) => ({
       set({ balances: res.data.data || [], loading: false });
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Failed to fetch leave balances";
+      toast.error(errorMsg);
+      set({ loading: false, error: errorMsg });
+    }
+  },
+
+  /* ===== FETCH EMPLOYEE BALANCES ===== */
+  fetchEmployeeBalances: async (employeeId: number) => {
+    try {
+      set({ loading: true, error: null });
+      const token = localStorage.getItem("accessToken") || "";
+
+      const res = await api.get(`/leave/balance/employee/${employeeId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log(res)
+
+      set({ balances: Array.isArray(res.data.data) ? res.data.data : [res.data.data], loading: false });
+    } catch (err: any) {
+      const errorMsg =
+        err?.response?.data?.message || "Failed to fetch employee leave balances";
       toast.error(errorMsg);
       set({ loading: false, error: errorMsg });
     }

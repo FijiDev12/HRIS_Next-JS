@@ -100,7 +100,12 @@ export default function FacilitiesPage() {
     clearError();
 
     if (type === "create") {
-      setForm({ siteName: "", createdBy: user?.id });
+      setForm({
+        siteName: "",
+        latitude: "",
+        longitude: "",
+        createdBy: user?.id,
+      });
     } else {
       setForm(site);
     }
@@ -122,12 +127,19 @@ export default function FacilitiesPage() {
      CRUD Actions
   ========================= */
   const handleSave = async () => {
-    if (!form?.siteName?.trim() && !employee) return;
+    if (!form?.siteName?.trim()) return;
+
+    const payload = {
+      siteName: form.siteName,
+      latitude: parseFloat(form.latitude),
+      longitude: parseFloat(form.longitude),
+      createdBy: employee?.id ?? 1,
+    };
 
     if (mode === "edit" && form?.id) {
-      await updateSite(form.id, { siteName: form.siteName, createdBy: form.createdBy });
+      await updateSite(form.id, payload);
     } else {
-      await createSite({ siteName: form.siteName, createdBy: employee?.id ?? 1 });
+      await createSite(payload);
     }
 
     handleClose();
@@ -293,7 +305,23 @@ export default function FacilitiesPage() {
                 disabled={mode === "view"}
                 fullWidth
               />
+              <TextField
+                label="Latitude"
+                type="float"
+                value={form.latitude || ""}
+                onChange={(e) => handleChange("latitude", e.target.value)}
+                disabled={mode === "view"}
+                fullWidth
+              />
 
+              <TextField
+                label="Longitude"
+                type="float"
+                value={form.longitude || ""}
+                onChange={(e) => handleChange("longitude", e.target.value)}
+                disabled={mode === "view"}
+                fullWidth
+              />
               {mode !== "view" && (
                 <Button variant="contained" onClick={handleSave} disabled={loading}>
                   {loading ? "Saving..." : "Save"}

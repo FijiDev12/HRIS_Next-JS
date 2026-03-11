@@ -194,11 +194,12 @@ export default function LeaveManagementPage() {
             onChange={(e) => setLeaveName(e.target.value)}
           />
           <TextField
-            label="Created By (Employee ID)"
-            type="number"
+            label="Created By"
+            type="text"
             fullWidth
+            disabled
             margin="normal"
-            value={createdBy}
+            value={getEmployeeName(createdBy)}
             onChange={(e) => setCreatedBy(Number(e.target.value))}
           />
         </DialogContent>

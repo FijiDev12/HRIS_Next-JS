@@ -21,12 +21,14 @@ import {
   TablePagination,
 } from "@mui/material";
 import { useMediaQuery, useTheme } from "@mui/material";
+import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { useLeaveRequestStore, LeaveRequest, CreateLeaveRequestPayload } from "@/app/store/useLeaveRequest";
 import { useEmployeeInfoStore } from "@/app/store/useEmployeeInfo";
-
+import { useLeaveStore } from "@/app/store/useLeaveType";
+import { useLeaveBalanceStore } from "@/app/store/useLeaveBalance";
 const modalStyle = {
   position: "absolute" as "absolute",
   top: "50%",
@@ -53,6 +55,16 @@ export default function LeaveRequestPage() {
     clearError,
   } = useLeaveRequestStore();
 
+    const {
+    leaves,
+    getLeaves
+  } = useLeaveStore();
+
+  const {
+    balances,
+    fetchEmployeeBalances
+  } = useLeaveBalanceStore();
+
   const { employee } = useEmployeeInfoStore();
 
   const [viewOpen, setViewOpen] = useState(false);
@@ -74,13 +86,24 @@ export default function LeaveRequestPage() {
 
   const [sessionData, setSessionData] = useState<{ roleId?: number; id?: number }>({});
 
+
+  
   // -------------------- FETCH SESSION --------------------
   useEffect(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("user");
       if (stored) setSessionData(JSON.parse(stored));
+      getLeaves()
+      
     }
   }, []);
+
+
+  useEffect(()=>{
+    if(balances){
+      console.log(balances)
+    }
+  },[balances])
 
   // -------------------- FETCH DATA --------------------
   useEffect(() => {
@@ -91,6 +114,8 @@ export default function LeaveRequestPage() {
                 await fetchLeaveRequests();
             } else {
                 await fetchLeaveRequestsByEmployee(employee.id);
+                console.log(employee.id)
+                await fetchEmployeeBalances(employee.id)
             }
             } catch {
             toast.error("Failed to fetch leave requests");
@@ -121,7 +146,13 @@ export default function LeaveRequestPage() {
   };
 
   // -------------------- ADD MODAL --------------------
-  const handleAddOpen = () => setAddOpen(true);
+  const handleAddOpen = () => {
+    if(balances.length === 0){
+      toast.warning("Insufficient balance!");
+    } else {
+      setAddOpen(true)
+    }
+  };
   const handleAddClose = () => {
     setNewLeave({
       employeeId: employee?.id || 0,
@@ -152,14 +183,16 @@ export default function LeaveRequestPage() {
     if (!newLeave.employeeId || !newLeave.leaveTypeId || !newLeave.fromDate || !newLeave.toDate || !newLeave.totalDays || !newLeave.reason) {
       toast.error("Please fill in all fields correctly");
       return;
+    } else {
+      try {
+        await createLeaveRequest(newLeave);
+        await toast.success("Leave request submitted successfully!");
+        handleAddClose();
+      } catch {
+        toast.error("Failed to submit leave request");
+      }
     }
-    try {
-      await createLeaveRequest(newLeave);
-      toast.success("Leave request submitted successfully!");
-      handleAddClose();
-    } catch {
-      toast.error("Failed to submit leave request");
-    }
+
   };
 
   // -------------------- APPROVE / REJECT --------------------
@@ -355,13 +388,28 @@ export default function LeaveRequestPage() {
           <Typography variant="h6" gutterBottom>Add Leave Request</Typography>
           <Stack spacing={2}>
             <TextField label="Employee ID" type="number" value={employee?.id || ""} disabled fullWidth />
-            <TextField
+            {/* <TextField
               label="Leave Type"
               type="number"
               value={newLeave.leaveTypeId}
               onChange={(e) => handleAddChange("leaveTypeId", Number(e.target.value))}
               fullWidth
-            />
+            /> */}
+            <FormControl fullWidth>
+              <InputLabel id="leave-type-label">Leave Type</InputLabel>
+              <Select
+                labelId="leave-type-label"
+                label="Leave Type"
+                value={newLeave.leaveTypeId}
+                onChange={(e) => handleAddChange("leaveTypeId", Number(e.target.value))}
+              >
+                {leaves?.map((leave) => (
+                  <MenuItem key={leave.id} value={leave.id}>
+                    {leave.leaveName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <TextField
               label="Start Date"
               type="date"

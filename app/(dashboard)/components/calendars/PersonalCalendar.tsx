@@ -9,6 +9,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { format } from "date-fns";
 import { useLeaveRequestStore } from "@/app/store/useLeaveRequest";
 import { useEmployeeInfoStore } from "@/app/store/useEmployeeInfo";
+import { useScheduleStore } from "@/app/store/useSchedule";
 import { toast } from "react-toastify";
 
 export default function LeaveCalendar() {

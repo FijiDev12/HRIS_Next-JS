@@ -36,6 +36,7 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
       const res = await api.get("/schedule", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      // console.log(res)
 
       set({ schedules: res.data.data, loading: false });
     } catch (err: any) {

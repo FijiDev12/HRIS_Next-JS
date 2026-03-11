@@ -265,7 +265,7 @@ export const useEmployeeStore = create<EmployeeState>((set, get) => ({
       const res = await api.get("/employee/assign/schedule", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
+      console.log(res)
       set({ employeeShifts: res.data.data, loading: false });
     } catch (err: any) {
       set({

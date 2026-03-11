@@ -25,7 +25,7 @@ export default function ResponsiveTabs() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const [value, setValue] = useState(0);
+  const [value, setValue] = useState(1);
 
   const handleChange = (event: any, newValue: number) => {
     setValue(newValue);
