@@ -33,7 +33,16 @@ export interface EmployeeShift {
   startDate: string;
   endDate: string;
 }
-
+interface BulkUploadResponse {
+  code: number;
+  message: string;
+  data: {
+    successCount: number;
+    errorCount: number;
+    createdEmployees: Array<{ id: number; firstName: string; lastName: string; email: string }>;
+    errors: Array<{ email: string; message: string }>;
+  };
+}
 interface CreateEmployeePayload {
   firstName: string;
   lastName: string;
@@ -50,7 +59,32 @@ interface CreateEmployeePayload {
 }
 
 interface UpdateEmployeePayload extends Partial<CreateEmployeePayload> {}
+export interface BulkEmployeeRow {
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  suffix?: string;
+  gender: "Male" | "Female";
+  birthDate: string;       // ISO date string: YYYY-MM-DD
+  civilStatus: "single" | "married" | "widowed" | "divorced";
+  nationality: string;
+  address: string;
+  email: string;
+  contactNo: string;       // As string, because Prisma expects string
+  positionId: number;
+  departmentId: number;
+  siteId: number;
+  employmentId?: number;   // optional if some rows can have NaN
+  dateHired: string;       // ISO date string: YYYY-MM-DD
+  basicSalary?: number;    // optional
+}
 
+// Payload interface for sending to the API
+export interface BulkUploadEmployeePayload {
+  file: File;  // the CSV/Excel file
+  // optionally, you can add metadata like uploaderId or other info
+  uploaderId?: number;
+}
 /* =========================
    State Interface
 ========================= */
@@ -68,6 +102,8 @@ interface EmployeeState {
   createEmployee: (payload: CreateEmployeePayload) => Promise<void>;
   updateEmployee: (id: number, payload: UpdateEmployeePayload) => Promise<void>;
   deleteEmployee: (id: number) => Promise<void>;
+// In EmployeeState
+bulkUploadEmployees: (file: File) => Promise<BulkUploadResponse["data"]>;
 
   assignShift: (payload: {
     employeeId: number;
@@ -75,6 +111,7 @@ interface EmployeeState {
     startDate: string;
     endDate: string;
   }) => Promise<void>;
+  getAssignShiftByEmpId: (id?: number) => Promise<void>;
 
   fetchEmployeeShifts: () => Promise<void>;
 
@@ -274,6 +311,66 @@ export const useEmployeeStore = create<EmployeeState>((set, get) => ({
       });
     }
   },
+  /* ===== ASSIGN SHIFT BY ID ===== */
+  getAssignShiftByEmpId: async (id) => {
+    try {
+      set({ loading: true, error: null });
+      const token = localStorage.getItem("accessToken") || "";
+      // Use employeeId in the URL
+      const res = await api.get(
+        `/employee/assign/schedule/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Update the store with the returned schedule data
+      if (res.data?.data) {
+        set((state) => ({
+          employeeShifts: [...state.employeeShifts, ...res.data.data],
+          loading: false,
+        }));
+      } else {
+        set({ loading: false });
+      }
+    } catch (err: any) {
+      set({
+        loading: false,
+        error: err?.response?.data?.message || "Failed to assign shift",
+      });
+    }
+  },
+  /* ===== BULK UPLOAD EMPLOYEES ===== */
+bulkUploadEmployees: async (file: File) => {
+  try {
+    set({ loading: true, error: null });
+    const token = localStorage.getItem("accessToken") || "";
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await api.post<BulkUploadResponse>("/employee/bulk-upload", formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    await get().fetchEmployees();
+    set({ loading: false });
+
+    return res.data.data; // ✅ return the response data
+  } catch (err: any) {
+    set({
+      loading: false,
+      error: err?.response?.data?.message || "Failed to bulk upload employees",
+    });
+    throw err;
+  }
+},
 
   clearError: () => set({ error: null }),
 }));

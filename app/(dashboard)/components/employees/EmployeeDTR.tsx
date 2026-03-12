@@ -138,7 +138,7 @@ export default function TimelogFilterTable() {
   <Stack spacing={2}>
     {paginatedTimelogs.length === 0 ? (
       <Typography align="center">
-        No attendance corrections found
+        No DTR found
       </Typography>
     ) : (
       paginatedTimelogs.map((log, index) => (
@@ -199,7 +199,7 @@ export default function TimelogFilterTable() {
         {paginatedTimelogs.length === 0 ? (
           <TableRow>
             <TableCell colSpan={5} align="center">
-              No attendance corrections found
+              No DTR found
             </TableCell>
           </TableRow>
         ) : (

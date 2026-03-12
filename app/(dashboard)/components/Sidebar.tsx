@@ -40,7 +40,7 @@ export const Sidebar = () => {
     { label: "Requests", icon: <SendIcon />, href: "/requests", visibility: false },
     { label: "Calendar", icon: <CalendarMonth />, href: "/calendar", visibility: false },
     { label: "Reports", icon: <Assessment />, href: "/reports", visibility: sessionData?.roleId !== 1 },
-    { label: "Payroll", icon: <ReceiptLongIcon />, href: "/payroll", visibility: false },
+    // { label: "Payroll", icon: <ReceiptLongIcon />, href: "/payroll", visibility: false },
  ];
     useEffect(() => {
     if (typeof window !== "undefined") {

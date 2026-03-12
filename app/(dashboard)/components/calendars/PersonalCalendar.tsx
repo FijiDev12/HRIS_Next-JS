@@ -9,7 +9,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { format } from "date-fns";
 import { useLeaveRequestStore } from "@/app/store/useLeaveRequest";
 import { useEmployeeInfoStore } from "@/app/store/useEmployeeInfo";
-import { useScheduleStore } from "@/app/store/useSchedule";
+import { useEmployeeStore } from "@/app/store/useEmployee";
 import { toast } from "react-toastify";
 
 export default function LeaveCalendar() {
@@ -18,15 +18,13 @@ export default function LeaveCalendar() {
   const [year, setYear] = useState(today.getFullYear());
   const calendarRef = useRef<FullCalendar>(null);
   const [sessionData, setSessionData] = useState<{ roleId?: number; id?: number }>({});
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
 
-  const { leaveRequests, fetchLeaveRequestsByEmployee,fetchLeaveRequests, loading, error } =
+  const { leaveRequests, fetchLeaveRequestsByEmployee, fetchLeaveRequests, loading, error } =
     useLeaveRequestStore();
   const { employee } = useEmployeeInfoStore();
-  const [selectedLeave, setSelectedLeave] = useState<any>(null);
+  const { getAssignShiftByEmpId, employeeShifts } = useEmployeeStore();
 
-//   useEffect(() => {
-//     fetchLeaveRequestsByEmployee(); // fetch all
-//   }, []);
   // -------------------- FETCH SESSION --------------------
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -34,76 +32,82 @@ export default function LeaveCalendar() {
       if (stored) setSessionData(JSON.parse(stored));
     }
   }, []);
-  
-    // -------------------- FETCH DATA --------------------
-    useEffect(() => {
-      if (employee) {
-          const fetchData = async () => {
-              try {
-              if (sessionData.roleId === 1) {
-                  await fetchLeaveRequests();
-              } else {
-                  await fetchLeaveRequestsByEmployee(employee.id);
-              }
-              } catch {
-              toast.error("Failed to fetch leave requests");
-              }
-          };
-          fetchData();
 
-      }
-    }, [employee, sessionData]);
+    const uniqueShifts = Array.from(
+    new Map((employeeShifts || []).map((s: any) => [s.workDate, s])).values()
+  );
 
+  // -------------------- FETCH DATA --------------------
   useEffect(() => {
-    const calendarApi: CalendarApi | undefined =
-      calendarRef.current?.getApi();
+    if (employee) {
+      const fetchData = async () => {
+        try {
+          if (sessionData.roleId === 1) {
+            await fetchLeaveRequests();
+          } else {
+            await fetchLeaveRequestsByEmployee(employee.id);
+            await getAssignShiftByEmpId(employee.id);
+          }
+        } catch {
+          toast.error("Failed to fetch data");
+        }
+      };
+      fetchData();
+    }
+  }, [employee, sessionData]);
+
+  // -------------------- SET CALENDAR DATE --------------------
+  useEffect(() => {
+    const calendarApi: CalendarApi | undefined = calendarRef.current?.getApi();
     if (calendarApi) {
       calendarApi.gotoDate(new Date(year, month, 1));
     }
   }, [month, year]);
 
-  /* =========================
-     Map Leave Requests to Calendar Events
-  ========================= */
-
-const calendarEvents = leaveRequests.map((leave) => {
-  const startDate = new Date(leave.fromDate);
-  const endDate = new Date(leave.toDate);
-
-  // Add 1 calendar day safely (exclusive end)
-  endDate.setDate(endDate.getDate() + 1);
-
+  // -------------------- MAP EVENTS --------------------
+  const calendarEvents = [
+    ...leaveRequests.map((leave) => {
+      const startDate = new Date(leave.fromDate);
+      const endDate = new Date(leave.toDate);
+      endDate.setDate(endDate.getDate() + 1);
+      return {
+        title: `${leave.leaveTypeId} - ${leave.status}`,
+        start: startDate,
+        end: endDate,
+        allDay: true,
+        extendedProps: { ...leave, type: "leave" }, // <--- spread first
+        backgroundColor:
+          leave.status === "APPROVED"
+            ? "#2e7d32"
+            : leave.status === "PENDING"
+            ? "#ed6c02"
+            : "#d32f2f",
+      };
+    }),
+...(uniqueShifts).map((shiftEntry: any) => {
+  const workDate = new Date(shiftEntry.workDate);
+  const shift = shiftEntry.shift;
   return {
-    title: `${leave.leaveTypeId} - ${leave.status}`,
-    start: startDate,
-    end: endDate,
+    title: shift.shiftName,
+    start: workDate,
+    end: workDate,
     allDay: true,
-    extendedProps: leave,
-    backgroundColor:
-      leave.status === "APPROVED"
-        ? "#2e7d32"
-        : leave.status === "PENDING"
-        ? "#ed6c02"
-        : "#d32f2f",
+    extendedProps: { ...shiftEntry, type: "shift" },
+    backgroundColor: "#1976d2",
   };
-});
-
+}),
+  ];
+  // -------------------- EVENT CLICK --------------------
   const handleEventClick = (arg: EventClickArg) => {
-    setSelectedLeave(arg.event.extendedProps);
+    setSelectedEvent(arg.event.extendedProps);
   };
+
+
 
   return (
     <Box sx={{ px: { xs: 1, sm: 2, md: 4 }, py: 2 }}>
-      {loading && (
-        <Typography sx={{ textAlign: "center" }}>
-          Loading leave requests...
-        </Typography>
-      )}
-      {error && (
-        <Typography sx={{ textAlign: "center", color: "red" }}>
-          {error}
-        </Typography>
-      )}
+      {loading && <Typography sx={{ textAlign: "center" }}>Loading...</Typography>}
+      {error && <Typography sx={{ textAlign: "center", color: "red" }}>{error}</Typography>}
 
       {/* Calendar */}
       <Box
@@ -111,10 +115,7 @@ const calendarEvents = leaveRequests.map((leave) => {
           ".fc": { color: "#1976d2" },
           ".fc-daygrid-day": { borderColor: "#1976d2" },
           ".fc-daygrid-day-number": { color: "#1976d2" },
-          ".fc-col-header-cell-cushion": {
-            color: "#1976d2",
-            fontWeight: "bold",
-          },
+          ".fc-col-header-cell-cushion": { color: "#1976d2", fontWeight: "bold" },
         }}
       >
         <FullCalendar
@@ -144,7 +145,7 @@ const calendarEvents = leaveRequests.map((leave) => {
       </Box>
 
       {/* Modal */}
-      <Modal open={!!selectedLeave} onClose={() => setSelectedLeave(null)}>
+      <Modal open={!!selectedEvent} onClose={() => setSelectedEvent(null)}>
         <Box
           sx={{
             position: "absolute",
@@ -160,45 +161,58 @@ const calendarEvents = leaveRequests.map((leave) => {
         >
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
             <Typography variant="h6" sx={{ color: "black" }}>
-              Leave Details
+              {selectedEvent?.type === "leave" ? "Leave Details" : "Shift Details"}
             </Typography>
-            <IconButton size="small" onClick={() => setSelectedLeave(null)}>
+            <IconButton size="small" onClick={() => setSelectedEvent(null)}>
               <CloseIcon fontSize="small" />
             </IconButton>
           </Box>
 
-          {selectedLeave && (
+          {selectedEvent && selectedEvent.type === "leave" && (
             <Box sx={{ color: "black" }}>
               <Typography>
-                <strong>From:</strong>{" "}
-                {format(new Date(selectedLeave.fromDate), "PPP")}
+                <strong>From:</strong> {format(new Date(selectedEvent.fromDate), "PPP")}
               </Typography>
-
               <Typography>
-                <strong>To:</strong>{" "}
-                {format(new Date(selectedLeave.toDate), "PPP")}
+                <strong>To:</strong> {format(new Date(selectedEvent.toDate), "PPP")}
               </Typography>
-
               <Typography>
-                <strong>Total Days:</strong> {selectedLeave.totalDays}
+                <strong>Total Days:</strong> {selectedEvent.totalDays}
               </Typography>
-
               <Typography sx={{ mt: 1 }}>
-                <strong>Reason:</strong> {selectedLeave.reason}
+                <strong>Reason:</strong> {selectedEvent.reason}
               </Typography>
-
               <Box sx={{ mt: 2 }}>
                 <Chip
-                  label={selectedLeave.status}
+                  label={selectedEvent.status}
                   color={
-                    selectedLeave.status === "APPROVED"
+                    selectedEvent.status === "APPROVED"
                       ? "success"
-                      : selectedLeave.status === "PENDING"
+                      : selectedEvent.status === "PENDING"
                       ? "warning"
                       : "error"
                   }
                 />
               </Box>
+            </Box>
+          )}
+
+          {selectedEvent && selectedEvent.type === "shift" && (
+            <Box sx={{ color: "black" }}>
+              <Typography>
+                <strong>Shift Name:</strong> {selectedEvent.shift.shiftName}
+              </Typography>
+              <Typography>
+                <strong>Start Time:</strong> {selectedEvent.shift.startTime}
+              </Typography>
+              <Typography>
+                <strong>End Time:</strong> {selectedEvent.shift.endTime}
+              </Typography>
+              {selectedEvent.shift.flexStart && (
+                <Typography>
+                  <strong>Flexible Start:</strong> {selectedEvent.shift.flexStart}
+                </Typography>
+              )}
             </Box>
           )}
         </Box>

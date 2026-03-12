@@ -1,49 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Typography } from "@mui/material";
-import DownloadIcon from "@mui/icons-material/Download";
-import { useEmployeeStore } from "@/app/store/useEmployee"; // adjust path
-import { useTimelogStore } from "@/app/store/useTimelogs"; // adjust path
-import { useLeaveRequestStore } from "@/app/store/useLeaveRequest"; // adjust path
+import React, { useState } from "react";
+import { Box, Typography, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+
+import EmployeeReports from "@/app/(dashboard)/components/reports/EmployeeReports";
+import AttendanceReports from "@/app/(dashboard)/components/reports/AttendanceReports";
+import LeaveReports from "@/app/(dashboard)/components/reports/LeaveReports";
 
 const ReportsPage = () => {
-  const { employees, fetchEmployees } = useEmployeeStore();
-  const { timelogs, getDTR } = useTimelogStore();
-  const { leaveRequests, fetchLeaveRequests } = useLeaveRequestStore();
-
-  const [loading, setLoading] = useState(true);
-
-  // Fetch all data on mount
-  useEffect(() => {
-    const fetchAll = async () => {
-      setLoading(true);
-      await fetchEmployees();
-      await getDTR(0, "", ""); // fetch all timelogs; adjust if API requires range
-      await fetchLeaveRequests();
-      setLoading(false);
-    };
-    fetchAll();
-  }, [fetchEmployees, getDTR, fetchLeaveRequests]);
-
-  // Convert array of objects to CSV string
-  const arrayToCSV = (data: any[]) => {
-    if (!data.length) return "";
-    const headers = Object.keys(data[0]);
-    const rows = data.map(row =>
-      headers.map(h => `"${String(row[h] ?? "")}"`).join(",")
-    );
-    return [headers.join(","), ...rows].join("\n");
-  };
-
-  const downloadCSV = (data: any[], filename: string) => {
-    const csv = arrayToCSV(data);
-    const blob = new Blob([csv], { type: "text/csv" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
-  };
+  const [reportType, setReportType] = useState("attendance");
 
   return (
     <Box sx={{ p: 3 }}>
@@ -51,66 +16,26 @@ const ReportsPage = () => {
         HRIS Reports
       </Typography>
 
-      <TableContainer component={Paper} sx={{ mb: 3 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Report Name</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell align="right">Download</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell>Employee</TableCell>
-              <TableCell>All employee records</TableCell>
-              <TableCell align="right">
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<DownloadIcon />}
-                  disabled={loading || !employees.length}
-                  onClick={() => downloadCSV(employees, "employees.csv")}
-                >
-                  Download CSV
-                </Button>
-              </TableCell>
-            </TableRow>
+      {/* Dropdown to select report */}
+      <FormControl sx={{ mb: 3, minWidth: 220 }}>
+        <InputLabel>Select Report</InputLabel>
+        <Select
+          value={reportType}
+          label="Select Report"
+          onChange={(e) => setReportType(e.target.value)}
+        >
+          <MenuItem value="employees">Employees</MenuItem>
+          <MenuItem value="attendance">Attendance</MenuItem>
+          <MenuItem value="leave">Leave Requests</MenuItem>
+        </Select>
+      </FormControl>
 
-            <TableRow>
-              <TableCell>Attendance</TableCell>
-              <TableCell>All timelogs / attendance records</TableCell>
-              <TableCell align="right">
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<DownloadIcon />}
-                  disabled={loading || !timelogs.length}
-                  onClick={() => downloadCSV(timelogs, "attendance.csv")}
-                >
-                  Download CSV
-                </Button>
-              </TableCell>
-            </TableRow>
-
-            <TableRow>
-              <TableCell>Leave Summary</TableCell>
-              <TableCell>All leave requests</TableCell>
-              <TableCell align="right">
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<DownloadIcon />}
-                  disabled={loading || !leaveRequests.length}
-                  onClick={() => downloadCSV(leaveRequests, "leave_summary.csv")}
-                >
-                  Download CSV
-                </Button>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {/* Render the selected report */}
+      <Box sx={{ mt: 2 }}>
+        {reportType === "employees" && <EmployeeReports />}
+        {reportType === "attendance" && <AttendanceReports />}
+        {reportType === "leave" && <LeaveReports />}
+      </Box>
     </Box>
   );
 };

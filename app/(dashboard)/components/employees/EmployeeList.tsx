@@ -6,14 +6,17 @@ import {
   TableBody, TableContainer, Paper,
   Button, Stack, TablePagination,
   FormControl, InputLabel, Select, MenuItem,
-  Grid, Typography, useTheme, useMediaQuery
+  Grid, Typography, useTheme, useMediaQuery,
 } from "@mui/material";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import { useEmployeeStore } from "@/app/store/useEmployee";
 import { usePositionStore } from "@/app/store/usePosition";
 import EmployeeModal from "@/app/(dashboard)/components/employees/EmployeeModal";
 
 export default function EmployeeListTab() {
-  const { employees, fetchEmployees, deleteEmployee } = useEmployeeStore();
+  const { employees, fetchEmployees, deleteEmployee, bulkUploadEmployees } = useEmployeeStore();
   const { positions, fetchPositions } = usePositionStore();
 
   const [open, setOpen] = useState(false);
@@ -35,6 +38,29 @@ export default function EmployeeListTab() {
     if (confirm("Delete employee?")) await deleteEmployee(id);
   };
 
+const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  try {
+    const result = await bulkUploadEmployees(file); // returns BulkUploadResponse["data"]
+
+    if (result.successCount > 0) {
+      toast.success(`${result.successCount} employees uploaded successfully!`);
+    }
+
+    if (result.errorCount > 0) {
+      result.errors.forEach((err) => {
+        toast.error(`There are ${result.errorCount} Unsuccessful which were ${err.email}`);
+      });
+    }
+
+    e.target.value = ""; // reset input
+  } catch (err: any) {
+    toast.error(err?.message || "Failed to upload employees");
+  }
+};
+
   const sortedEmployees = [...employees].sort((a, b) => a.id - b.id);
   const filteredEmployees = sortedEmployees.filter(emp => {
     if (positionFilter === "all") return true;
@@ -53,6 +79,12 @@ export default function EmployeeListTab() {
           }}
         >
           Create Employee
+        </Button>
+
+        {/* Bulk Upload Button */}
+        <Button variant="outlined" component="label">
+          Upload CSV
+          <input type="file" accept=".csv" hidden onChange={handleBulkUpload} />
         </Button>
 
         <FormControl sx={{ minWidth: 200 }}>
@@ -74,65 +106,62 @@ export default function EmployeeListTab() {
 
       {/* Desktop Table */}
       {!isMobile && (
-        <>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell>First Name</TableCell>
+                <TableCell>Last Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Contact</TableCell>
+                <TableCell>Position</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredEmployees?.length === 0 ? (
                 <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>First Name</TableCell>
-                  <TableCell>Last Name</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Contact</TableCell>
-                  <TableCell>Position</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell colSpan={7} align="center">
+                    No employee found
+                  </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredEmployees?.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center">
-                      No employee found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredEmployees
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((emp) => (
-                      <TableRow key={emp.id}>
-                        <TableCell>{emp.id}</TableCell>
-                        <TableCell>{emp.firstName}</TableCell>
-                        <TableCell>{emp.lastName}</TableCell>
-                        <TableCell>{emp.email}</TableCell>
-                        <TableCell>{emp.contactNo}</TableCell>
-                        <TableCell>
-                          {positions.find((p) => p.id === emp.positionId)?.positionName || "—"}
-                        </TableCell>
-                        <TableCell>
-                          <Stack direction="row" spacing={1}>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              onClick={() => {
-                                setCurrentEmployee(emp);
-                                setIsEdit(true);
-                                setOpen(true);
-                              }}
-                            >
-                              Edit
-                            </Button>
-                            <Button size="small" color="error" onClick={() => handleDelete(emp.id)}>
-                              Delete
-                            </Button>
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
+              ) : (
+                filteredEmployees
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((emp) => (
+                    <TableRow key={emp.id}>
+                      <TableCell>{emp.id}</TableCell>
+                      <TableCell>{emp.firstName}</TableCell>
+                      <TableCell>{emp.lastName}</TableCell>
+                      <TableCell>{emp.email}</TableCell>
+                      <TableCell>{emp.contactNo}</TableCell>
+                      <TableCell>
+                        {positions.find((p) => p.id === emp.positionId)?.positionName || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1}>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={() => {
+                              setCurrentEmployee(emp);
+                              setIsEdit(true);
+                              setOpen(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button size="small" color="error" onClick={() => handleDelete(emp.id)}>
+                            Delete
+                          </Button>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))
+              )}
+            </TableBody>
+          </Table>
           <TablePagination
             component="div"
             count={filteredEmployees.length}
@@ -141,7 +170,7 @@ export default function EmployeeListTab() {
             rowsPerPage={rowsPerPage}
             rowsPerPageOptions={[rowsPerPage]}
           />
-        </>
+        </TableContainer>
       )}
 
       {/* Mobile Grid */}
@@ -193,6 +222,9 @@ export default function EmployeeListTab() {
         employee={currentEmployee}
         isEdit={isEdit}
       />
+
+      {/* Toastify Container */}
+      <ToastContainer position="top-right" autoClose={4000} />
     </>
   );
 }
