@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import api from "@/app/api/withoutAuth/route"; // your API instance
+import api from "@/app/lib/api";
 
 interface Role {
   id: number;

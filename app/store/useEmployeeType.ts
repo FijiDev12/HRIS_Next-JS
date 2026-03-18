@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import api from "@/app/api/withoutAuth/route"; // your axios/fetch wrapper
+import api from "@/app/lib/api";
 
 export interface EmploymentStatus {
   id?: number;

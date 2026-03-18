@@ -1,5 +1,6 @@
+// app/lib/api.ts
 import axios from "axios";
-import { useAuthStore } from "@/app/store/useAuth"; // adjust path if needed
+import { useAuthStore } from "@/app/store/useAuth";
 
 const api = axios.create({
   baseURL: "http://localhost:8081/api/v1",
@@ -11,7 +12,7 @@ const api = axios.create({
 // Add request interceptor to include auth token
 api.interceptors.request.use(
   (config) => {
-    const token = useAuthStore.getState().accessToken; // get current token from Zustand store
+    const token = useAuthStore.getState().accessToken;
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

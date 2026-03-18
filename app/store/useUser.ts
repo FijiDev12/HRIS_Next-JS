@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import api from "@/app/api/withoutAuth/route";
+import api from "@/app/lib/api";
 // import { useEmployeeStore } from "@/app/store/useEmployeeInfo";
 
 export interface User {
