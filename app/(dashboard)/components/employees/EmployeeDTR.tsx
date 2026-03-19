@@ -76,6 +76,11 @@ export default function TimelogFilterTable() {
     setSelectedLog(log);
     setOpenModal(true);
   };
+  useEffect(()=>{
+    if(paginatedTimelogs){
+      console.log(paginatedTimelogs)
+    }
+  },[paginatedTimelogs])
 
   return (
     <Box sx={{ p: 3 }}>
@@ -155,7 +160,7 @@ export default function TimelogFilterTable() {
         >
           <Stack>
             <Typography fontWeight="bold">
-              ID: {log.id}
+              ID: {log?.id}
             </Typography>
             <Typography>
               Employee: {log.employeeId}
@@ -268,7 +273,7 @@ export default function TimelogFilterTable() {
               <Typography>Employee No: {selectedLog.employeeId}</Typography>
               <Typography>Log Date: {selectedLog.logDate}</Typography>
               <Typography>Type: {selectedLog.type}</Typography>
-              <Typography>Status: {selectedLog.status}</Typography>
+              {/* <Typography>Status: {selectedLog.status}</Typography> */}
               <Button variant="contained" onClick={() => setOpenModal(false)}>
                 Close
               </Button>

@@ -48,13 +48,13 @@ export const Sidebar = () => {
         if (stored) setSessionData(JSON.parse(stored));
       }
     }, []);
-useEffect(() => {
-  if (isMobile) {
-    setSidebarCollapsed(true);  // close on mobile
-  } else {
-    setSidebarCollapsed(false); // open on desktop
-  }
-}, [pathname, isMobile]);
+    useEffect(() => {
+      if (isMobile) {
+        setSidebarCollapsed(true);  // close on mobile
+      } else {
+        setSidebarCollapsed(false); // open on desktop
+      }
+    }, [pathname, isMobile]);
   return (
     <Box
       sx={{
@@ -62,7 +62,7 @@ useEffect(() => {
         width: !isMobile && isSidebarCollapsed ? 64 : 220,
         position: isMobile? 'absolute' : 'relative',
         height: isMobile? '100%' : "auto",
-        zIndex: 10000,
+        zIndex: 10,
         display: isMobile && isSidebarCollapsed ? 'none' : 'flex',
         flexDirection: "column",
         transition: "width 0.25s ease",

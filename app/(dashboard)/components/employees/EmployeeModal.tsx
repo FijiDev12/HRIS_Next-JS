@@ -34,7 +34,7 @@ const modalStyle = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 500,
+  width: '90%',
   bgcolor: "background.paper",
   boxShadow: 24,
   p: 4,
@@ -270,7 +270,7 @@ export default function EmployeeModal({
             */}
 
             {/* Upload Profile */}
-            <Grid size={[6, 6, 6]}>
+            <Grid size={[12, 6, 6]}>
               <Button variant="contained" component="label" fullWidth>
                 Upload Profile Photo
                 <input type="file" hidden accept="image/*" onChange={(e) => handleImageChange(e.target.files?.[0] || null)} />

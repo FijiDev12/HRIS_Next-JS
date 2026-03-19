@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
+import { useTheme, useMediaQuery } from "@mui/material";
 import {
   Box,
   Table,
@@ -33,6 +34,8 @@ const formatDate = (isoDate: string | undefined) => {
 };
 
 const LeaveReports = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { leaveRequests, fetchLeaveRequests } = useLeaveRequestStore();
   const { employees, fetchEmployees } = useEmployeeStore();
   const { leaves, getLeaves } = useLeaveStore();
@@ -164,7 +167,7 @@ const LeaveReports = () => {
         </Button>
       </Box>
 
-      <TableContainer component={Paper}>
+      {/* <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
@@ -199,7 +202,62 @@ const LeaveReports = () => {
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
         />
-      </TableContainer>
+      </TableContainer> */}
+      {isMobile ? (
+        <Box display="flex" flexDirection="column" gap={2}>
+          {paginatedData.map((row, i) => (
+            <Paper key={i} sx={{ p: 2, borderRadius: 2 }}>
+              {headers.map((h) => (
+                <Box key={h} sx={{ mb: 1 }}>
+                  <strong>{h}:</strong> {(row as any)[h]}
+                </Box>
+              ))}
+
+              <Box textAlign="right" mt={2}>
+                <Button
+                  size="small"
+                  variant="contained"
+                  startIcon={<DownloadIcon />}
+                  onClick={() => downloadCSV([row])}
+                >
+                  Download
+                </Button>
+              </Box>
+            </Paper>
+          ))}
+        </Box>
+      ) : (
+        <Table>
+          <TableHead>
+            <TableRow>
+              {headers.map((h) => (
+                <TableCell key={h}>{h}</TableCell>
+              ))}
+              <TableCell align="right">Action</TableCell>
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {paginatedData.map((row, i) => (
+              <TableRow key={i}>
+                {headers.map((h) => (
+                  <TableCell key={h}>{(row as any)[h]}</TableCell>
+                ))}
+                <TableCell align="right">
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={<DownloadIcon />}
+                    onClick={() => downloadCSV([row])}
+                  >
+                    Download
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </Box>
   );
 };

@@ -183,7 +183,7 @@ export default function LeaveManagementPage() {
       )}
 
       {/* Add/Edit Modal */}
-      <Dialog open={openModal} onClose={handleCloseModal}>
+      <Dialog open={openModal} onClose={handleCloseModal} sx={{width: {xs: '90%', sm : '90%'},}}>
         <DialogTitle>{editingLeave ? "Edit Leave" : "Add Leave"}</DialogTitle>
         <DialogContent>
           <TextField

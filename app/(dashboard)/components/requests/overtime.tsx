@@ -32,7 +32,7 @@ const modalStyle = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 450,
+  width: {xs: '90%', sm : '90%', md: 500, lg: 500},
   bgcolor: "background.paper",
   boxShadow: 24,
   p: 4,
@@ -217,7 +217,7 @@ export default function OTRequestPage() {
         <Grid size={[4, 4, 4]}>
           <Card>
             <CardContent>
-              <Typography variant="h6">Total Requests</Typography>
+              <Typography sx={{ fontSize: "clamp(0.75rem, 1.2vw, 1rem)" }} variant="h6">Total Requests</Typography>
               <Typography variant="h4">{otRequests.length}</Typography>
             </CardContent>
           </Card>
@@ -225,7 +225,7 @@ export default function OTRequestPage() {
         <Grid size={[4, 4, 4]}>
           <Card>
             <CardContent>
-              <Typography variant="h6">Pending</Typography>
+              <Typography sx={{ fontSize: "clamp(0.75rem, 1.2vw, 1rem)" }} variant="h6">Pending</Typography>
               <Typography variant="h4">{otRequests.filter(o => o.status === "PENDING").length}</Typography>
             </CardContent>
           </Card>
@@ -233,7 +233,7 @@ export default function OTRequestPage() {
         <Grid size={[4, 4, 4]}>
           <Card>
             <CardContent>
-              <Typography variant="h6">Approved</Typography>
+              <Typography sx={{ fontSize: "clamp(0.75rem, 1.2vw, 1rem)" }} variant="h6">Approved</Typography>
               <Typography variant="h4">{otRequests.filter(o => o.status === "APPROVED").length}</Typography>
             </CardContent>
           </Card>

@@ -17,7 +17,7 @@ const ReportsPage = () => {
       </Typography>
 
       {/* Dropdown to select report */}
-      <FormControl sx={{ mb: 3, minWidth: 220 }}>
+      <FormControl sx={{ mb: 1, minWidth: 220 }}>
         <InputLabel>Select Report</InputLabel>
         <Select
           value={reportType}

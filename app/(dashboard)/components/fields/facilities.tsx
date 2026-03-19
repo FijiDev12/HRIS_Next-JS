@@ -34,7 +34,7 @@ const modalStyle = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 400,
+  width: {xs: '90%', sm : '90%', md: 500, lg: 500},
   bgcolor: "background.paper",
   boxShadow: 24,
   p: 4,
@@ -171,7 +171,7 @@ export default function FacilitiesPage() {
         <Grid size={[4, 4, 4]}>
           <Card>
             <CardContent>
-              <Typography variant="h6">Total Facilities</Typography>
+              <Typography sx={{ fontSize: "clamp(0.75rem, 1.2vw, 1rem)" }} variant="h6">Total Facilities</Typography>
               <Typography variant="h4">{sites.length}</Typography>
             </CardContent>
           </Card>
@@ -180,7 +180,7 @@ export default function FacilitiesPage() {
         <Grid size={[4, 4, 4]}>
           <Card>
             <CardContent>
-              <Typography variant="h6">Unique Names</Typography>
+              <Typography sx={{ fontSize: "clamp(0.75rem, 1.2vw, 1rem)" }} variant="h6">Unique Names</Typography>
               <Typography variant="h4">{new Set(sites.map((s) => s.siteName)).size}</Typography>
             </CardContent>
           </Card>
@@ -189,7 +189,7 @@ export default function FacilitiesPage() {
         <Grid size={[4, 4, 4]}>
           <Card>
             <CardContent>
-              <Typography variant="h6">Active Records</Typography>
+              <Typography sx={{ fontSize: "clamp(0.75rem, 1.2vw, 1rem)" }} variant="h6">Active Records</Typography>
               <Typography variant="h4">{sites.length}</Typography>
             </CardContent>
           </Card>

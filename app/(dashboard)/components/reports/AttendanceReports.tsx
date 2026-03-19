@@ -1,5 +1,5 @@
 "use client";
-
+import { useTheme, useMediaQuery } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -15,6 +15,7 @@ import {
   MenuItem,
   Select,
   TextField,
+  Grid,
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 
@@ -35,6 +36,8 @@ interface TimelogRow {
 }
 
 const AttendanceReports = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { timelogs, getTimelogsBySite } = useTimelogStore();
   const { sites, fetchSites } = useSiteStore();
   const { employees, fetchEmployees } = useEmployeeStore();
@@ -125,97 +128,139 @@ const AttendanceReports = () => {
   return (
     <Box sx={{ p: 2 }}>
       {/* Filters */}
-      <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-        <Select
-          value={siteId ?? ""}
-          onChange={e => setSiteId(Number(e.target.value))}
-        >
-          {sites.map(site => (
-            <MenuItem key={site.id} value={site.id}>
-              {site.siteName}
-            </MenuItem>
-          ))}
-        </Select>
-
-        <TextField
-          label="From"
-          type="date"
-          value={dateFrom}
-          onChange={e => setDateFrom(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-
-        <TextField
-          label="To"
-          type="date"
-          value={dateTo}
-          onChange={e => setDateTo(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-
-        <Button
-          variant="contained"
-          startIcon={<DownloadIcon />}
-          disabled={loading || !tableData.length}
-          onClick={() => downloadCSV(tableData)}
-        >
-          Download Full Report
-        </Button>
-      </Box>
-
-      {/* Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              {headers.map(h => <TableCell key={h}>{h}</TableCell>)}
-              {headers.length > 0 ? <TableCell align="right">Action</TableCell> : ''}
-            </TableRow>
-          </TableHead>
-          
-        
-<TableBody>
-  {paginatedData.length > 0 ? (
-    paginatedData.map((row, i) => (
-      <TableRow key={i}>
-        {headers.map(h => (
-          <TableCell key={h}>{(row as any)[h]}</TableCell>
-        ))}
-
-        <TableCell align="right">
+      <Grid container spacing={2} sx={{ my: 2 }}>
+        <Grid size={[12, 3, 3]}>
+          <Select
+            value={siteId ?? ""}
+            onChange={e => setSiteId(Number(e.target.value))}
+          >
+            {sites.map(site => (
+              <MenuItem key={site.id} value={site.id}>
+                {site.siteName}
+              </MenuItem>
+            ))}
+          </Select>
+        </Grid>
+        <Grid size={[12, 3, 3]}>
+          <TextField
+            label="From"
+            type="date"
+            value={dateFrom}
+            onChange={e => setDateFrom(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
+        </Grid>
+        <Grid size={[12, 3, 3]}>
+          <TextField
+            label="To"
+            type="date"
+            value={dateTo}
+            onChange={e => setDateTo(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
+        </Grid>
+        <Grid size={[12, 3, 3]}>
           <Button
-            size="small"
             variant="contained"
             startIcon={<DownloadIcon />}
-            onClick={() => downloadCSV([row])}
+            disabled={loading || !tableData.length}
+            onClick={() => downloadCSV(tableData)}
           >
-            Download
+            Download Full Report
           </Button>
-        </TableCell>
-      </TableRow>
-    ))
-  ) : (
-    <TableRow>
-      <TableCell colSpan={headers.length + 1} align="center">
-        No data
-      </TableCell>
-    </TableRow>
-  )}
-</TableBody>
-        </Table>
+        </Grid>
+        
 
-        <TablePagination
-          component="div"
-          count={tableData.length}
-          page={page}
-          onPageChange={(e, newPage) => setPage(newPage)}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={e => {
-            setRowsPerPage(parseInt(e.target.value, 10));
-            setPage(0);
-          }}
-        />
-      </TableContainer>
+        
+      </Grid>
+
+      {/* Table */}
+ {isMobile ? (
+    <Box display="flex" flexDirection="column" gap={2} p={2}>
+      {paginatedData.length > 0 ? (
+        paginatedData.map((row, i) => (
+          <Paper key={i} sx={{ p: 2, borderRadius: 2 }}>
+            {headers.map((h) => (
+              <Box key={h} sx={{ mb: 1 }}>
+                <strong>{h}:</strong> {(row as any)[h]}
+              </Box>
+            ))}
+
+            <Box textAlign="right" mt={2}>
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<DownloadIcon />}
+                onClick={() => downloadCSV([row])}
+              >
+                Download
+              </Button>
+            </Box>
+          </Paper>
+        ))
+      ) : (
+        <Paper sx={{ p: 2, textAlign: "center" }}>
+          No data
+        </Paper>
+      )}
+    </Box>
+  ) : (
+    <>
+      <Table>
+        <TableHead>
+          <TableRow>
+            {headers.map((h) => (
+              <TableCell key={h}>{h}</TableCell>
+            ))}
+            {headers.length > 0 && (
+              <TableCell align="right">Action</TableCell>
+            )}
+          </TableRow>
+        </TableHead>
+
+        <TableBody>
+          {paginatedData.length > 0 ? (
+            paginatedData.map((row, i) => (
+              <TableRow key={i}>
+                {headers.map((h) => (
+                  <TableCell key={h}>{(row as any)[h]}</TableCell>
+                ))}
+
+                <TableCell align="right">
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={<DownloadIcon />}
+                    onClick={() => downloadCSV([row])}
+                  >
+                    Download
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={headers.length + 1} align="center">
+                No data
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+
+      <TablePagination
+        component="div"
+        count={tableData.length}
+        page={page}
+        onPageChange={(e, newPage) => setPage(newPage)}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={(e) => {
+          setRowsPerPage(parseInt(e.target.value, 10));
+          setPage(0);
+        }}
+      />
+    </>
+  )}
     </Box>
   );
 };

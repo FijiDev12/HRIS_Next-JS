@@ -69,40 +69,49 @@ const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
   return (
     <>
-      <Stack direction="row" spacing={2} sx={{ mb: 2 }} alignItems="center">
-        <Button
-          variant="contained"
-          onClick={() => {
-            setCurrentEmployee(null);
-            setIsEdit(false);
-            setOpen(true);
-          }}
-        >
-          Create Employee
-        </Button>
-
-        {/* Bulk Upload Button */}
-        <Button variant="outlined" component="label">
-          Upload CSV
-          <input type="file" accept=".csv" hidden onChange={handleBulkUpload} />
-        </Button>
-
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>Filter by Position</InputLabel>
-          <Select
-            value={positionFilter}
-            label="Filter by Position"
-            onChange={(e) => setPositionFilter(e.target.value as number | "all")}
+      <Grid container spacing={2}>
+        <Grid size={[6, 3, 3]}>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setCurrentEmployee(null);
+              setIsEdit(false);
+              setOpen(true);
+            }}
+            sx={{
+              fontSize: "clamp(0.75rem, 1.2vw, 1rem)"
+            }}
           >
-            <MenuItem value="all">All Positions</MenuItem>
-            {positions.map((pos) => (
-              <MenuItem key={pos.id} value={pos.id}>
-                {pos.positionName}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Stack>
+            Create Employee
+          </Button>
+        </Grid>
+        <Grid size={[6, 5, 5]}>
+          <Button variant="outlined" component="label">
+            Upload CSV
+            <input type="file" accept=".csv" hidden onChange={handleBulkUpload} />
+          </Button>
+        </Grid>
+
+        <Grid size={[12, 4, 4]}>
+          <FormControl sx={{ minWidth: 200, width: '100%', mb: 2 }}>
+            <InputLabel>Filter by Position</InputLabel>
+            <Select
+              value={positionFilter}
+              label="Filter by Position"
+              onChange={(e) => setPositionFilter(e.target.value as number | "all")}
+            >
+              <MenuItem value="all">All Positions</MenuItem>
+              {positions.map((pos) => (
+                <MenuItem key={pos.id} value={pos.id}>
+                  {pos.positionName}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+
+        
+      </Grid>
 
       {/* Desktop Table */}
       {!isMobile && (
