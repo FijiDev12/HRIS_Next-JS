@@ -28,7 +28,7 @@ import { useTheme, useMediaQuery } from "@mui/material";
 
 export const Sidebar = () => {
 
-  const { isSidebarCollapsed, toggleSidebar  } = useLayout();
+  const { isSidebarCollapsed, toggleSidebar, setSidebarCollapsed   } = useLayout();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // <=600px
   const pathname = usePathname(); // get current route
@@ -48,6 +48,13 @@ export const Sidebar = () => {
         if (stored) setSessionData(JSON.parse(stored));
       }
     }, []);
+useEffect(() => {
+  if (isMobile) {
+    setSidebarCollapsed(true);  // close on mobile
+  } else {
+    setSidebarCollapsed(false); // open on desktop
+  }
+}, [pathname, isMobile]);
   return (
     <Box
       sx={{
