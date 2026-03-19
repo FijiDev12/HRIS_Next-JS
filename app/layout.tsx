@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gachiakuta",
-  description: "Rudo Web Application",
+  title: "CHSI Portal",
+  description: "CHSI Web Application",
 };
 
 export default function RootLayout({
