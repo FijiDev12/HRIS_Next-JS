@@ -176,7 +176,7 @@ useEffect(() => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            width: 500,
+            width: {xs: '90%', sm : '90%', md: 500, lg: 500},
           }}
         >
           <Paper sx={{ p: 3, borderRadius: 3 }}>

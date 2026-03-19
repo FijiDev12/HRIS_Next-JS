@@ -209,7 +209,7 @@ export default function TimelogFilterTable() {
           justifyContent: "center",
         }}
       >
-        <Paper sx={{ p: 4, maxWidth: 500, width: "90%" }}>
+        <Paper sx={{ p: 4, maxWidth: 500, width: {xs: '90%', sm : '90%', md: 500, lg: 500} }}>
           {selectedLog && (
             <Stack spacing={2}>
               <Typography variant="h6">
