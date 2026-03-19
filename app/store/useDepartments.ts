@@ -36,7 +36,7 @@ export const useDepartmentStore = create<DepartmentStore>((set, get) => ({
   fetchDepartments: async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await axios.get("http://localhost:8081/api/v1/department", {
+      const res = await axios.get("https://chsi-prisma.onrender.com/api/v1/department", {
         headers: { Authorization: `Bearer ${token}` },
       });
       set({ departments: res.data.data || res.data });
@@ -49,7 +49,7 @@ export const useDepartmentStore = create<DepartmentStore>((set, get) => ({
     try {
       const token = localStorage.getItem("accessToken");
       const res = await axios.get(
-        `http://localhost:8081/api/v1/department/${id}`,
+        `https://chsi-prisma.onrender.com/api/v1/department/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -65,7 +65,7 @@ export const useDepartmentStore = create<DepartmentStore>((set, get) => ({
     try {
       const token = localStorage.getItem("accessToken");
       const res = await axios.post(
-        "http://localhost:8081/api/v1/department",
+        "https://chsi-prisma.onrender.com/api/v1/department",
         data,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -82,7 +82,7 @@ export const useDepartmentStore = create<DepartmentStore>((set, get) => ({
     try {
       const token = localStorage.getItem("accessToken");
       const res = await axios.patch(
-        `http://localhost:8081/api/v1/department/${id}`,
+        `https://chsi-prisma.onrender.com/api/v1/department/${id}`,
         data,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -106,7 +106,7 @@ export const useDepartmentStore = create<DepartmentStore>((set, get) => ({
   deleteDepartment: async (id) => {
     try {
       const token = localStorage.getItem("accessToken");
-      await axios.delete(`http://localhost:8081/api/v1/department/${id}`, {
+      await axios.delete(`https://chsi-prisma.onrender.com/api/v1/department/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       // ✅ remove from state after deletion
