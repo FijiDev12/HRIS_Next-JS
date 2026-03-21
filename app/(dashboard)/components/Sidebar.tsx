@@ -7,6 +7,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Typography,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import IconButton from "@mui/material/IconButton";
@@ -17,7 +18,7 @@ import SendIcon from '@mui/icons-material/Send';
 import CalendarMonth from '@mui/icons-material/CalendarMonth';
 import Assessment from '@mui/icons-material/Assessment';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import Logo from "@/app/assets/general/Test_Logo.jpg";
+// import Logo from "@/app/assets/general/Test_Logo.jpg";
 import Link from "next/link";
 import { useLayout } from "../context/LayoutContext";
 import { usePathname } from "next/navigation"; // <--- import this
@@ -83,7 +84,7 @@ export const Sidebar = () => {
         <IconButton onClick={toggleSidebar} size="small" sx={{ display: isMobile ? 'flex' : 'none' }}>
           <MenuIcon />
         </IconButton>
-        <Image
+        {/* <Image
           src={Logo}
           alt="Logo"
           width={isSidebarCollapsed ? 50 : 120}
@@ -92,7 +93,8 @@ export const Sidebar = () => {
             opacity: 0.9,
             transition: "all 0.2s ease",
           }}
-        />
+        /> */}
+        <Typography sx={{ color:'gray' }}>CHSI</Typography>
 
       </Box>
 

@@ -22,7 +22,7 @@ import TimeLogTab from "@/app/(dashboard)/components/employees/EmployeeTimelogs"
 import DTRTab from "@/app/(dashboard)/components/employees/EmployeeDTR";
 
 export default function ManageEmployeesPage() {
-  const [tabIndex, setTabIndex] = useState(3);
+  const [tabIndex, setTabIndex] = useState(0);
 
   // Detect if mobile screen (≤600px)
   const theme = useTheme();

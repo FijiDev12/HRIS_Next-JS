@@ -8,7 +8,7 @@ import {
   InputLabel, Grid, useTheme, useMediaQuery
 } from "@mui/material";
 import { useScheduleStore, Schedule } from "@/app/store/useSchedule";
-
+import { useBreaktimeStore, Breaktime } from "@/app/store/useBreakTIme";
 const modalStyle = {
   position: "absolute" as "absolute",
   top: "50%",
@@ -35,8 +35,26 @@ export default function ScheduleTab() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
+  const {
+    breaktimes,
+    fetchBreaktimes,
+    createBreaktime,
+    updateBreaktime,
+    deleteBreaktime
+  } = useBreaktimeStore();
+
+  const [breakModalOpen, setBreakModalOpen] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
+  const [currentBreak, setCurrentBreak] = useState<Breaktime | null>(null);
+
+  const [bStart, setBStart] = useState("");
+  const [bEnd, setBEnd] = useState("");
+  const [isFlexible, setIsFlexible] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
+
   useEffect(() => {
     fetchSchedules();
+    fetchBreaktimes();
   }, []);
 
   const handleOpen = (schedule: Schedule | null = null, edit = false) => {
@@ -56,6 +74,40 @@ export default function ScheduleTab() {
     }
 
     setOpen(true);
+  };
+
+  const handleOpenBreak = (schedule: Schedule) => {
+    setSelectedSchedule(schedule);
+    setBreakModalOpen(true);
+  };
+
+  const handleCloseBreak = () => {
+    setBreakModalOpen(false);
+    setCurrentBreak(null);
+    setBStart("");
+    setBEnd("");
+    setIsFlexible(false);
+    setIsPaid(false);
+  };
+
+  const handleSaveBreak = async () => {
+    if (!selectedSchedule) return;
+
+    const payload = {
+      shiftId: selectedSchedule.id,
+      startTime: bStart,
+      endTime: bEnd,
+      isFlexible,
+      isPaid
+    };
+
+    if (currentBreak) {
+      await updateBreaktime({ id: currentBreak.id, ...payload });
+    } else {
+      await createBreaktime(payload);
+    }
+
+    handleCloseBreak();
   };
 
   const handleClose = () => {
@@ -122,6 +174,14 @@ export default function ScheduleTab() {
                         <Button size="small" variant="outlined" onClick={() => handleOpen(schedule, false)}>View</Button>
                         <Button size="small" variant="contained" onClick={() => handleOpen(schedule, true)}>Edit</Button>
                         <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(schedule.id)}>Delete</Button>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="secondary"
+                          onClick={() => handleOpenBreak(schedule)}
+                        >
+                          Breaks
+                        </Button>
                       </Stack>
                     </TableCell>
                   </TableRow>
@@ -150,6 +210,14 @@ export default function ScheduleTab() {
                     <Button size="small" variant="outlined" onClick={() => handleOpen(schedule, false)}>View</Button>
                     <Button size="small" variant="contained" onClick={() => handleOpen(schedule, true)}>Edit</Button>
                     <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(schedule.id)}>Delete</Button>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="secondary"
+                      onClick={() => handleOpenBreak(schedule)}
+                    >
+                      Breaks
+                    </Button>
                   </Stack>
                 </Paper>
               </Grid>
@@ -165,39 +233,145 @@ export default function ScheduleTab() {
             {isEdit ? "Edit Schedule" : currentSchedule ? "View Schedule" : "Create Schedule"}
           </Typography>
 
-          <TextField
-            label="Shift Name"
-            value={shiftName}
-            onChange={(e) => setShiftName(e.target.value)}
-            fullWidth
-            sx={{ mb: 2 }}
-            disabled={!!currentSchedule && !isEdit}
-          />
+<TextField
+  label="Shift Name"
+  value={shiftName}
+  onChange={(e) => setShiftName(e.target.value)}
+  fullWidth
+  sx={{ mb: 2 }}
+  disabled={!isEdit && !!currentSchedule}
+/>
 
-          {!currentSchedule && (
-            <>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Schedule Type</InputLabel>
-                <Select value={scheduleType} label="Schedule Type" onChange={(e) => setScheduleType(e.target.value as "STANDARD" | "FLEX")}>
-                  <MenuItem value="STANDARD">Standard Schedule</MenuItem>
-                  <MenuItem value="FLEX">Flex Schedule</MenuItem>
-                </Select>
-              </FormControl>
+{(isEdit || !currentSchedule) && (
+  <>
+    <FormControl fullWidth sx={{ mb: 2 }}>
+      <InputLabel>Schedule Type</InputLabel>
+      <Select
+        value={scheduleType}
+        label="Schedule Type"
+        onChange={(e) =>
+          setScheduleType(e.target.value as "STANDARD" | "FLEX")
+        }
+      >
+        <MenuItem value="STANDARD">Standard Schedule</MenuItem>
+        <MenuItem value="FLEX">Flex Schedule</MenuItem>
+      </Select>
+    </FormControl>
 
-              {scheduleType === "STANDARD" && (
-                <>
-                  <TextField label="Start Time" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth sx={{ mb: 2 }} />
-                  <TextField label="End Time" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth sx={{ mb: 2 }} />
-                </>
-              )}
-            </>
-          )}
+    {scheduleType === "STANDARD" && (
+      <>
+        <TextField
+          label="Start Time"
+          type="time"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+          fullWidth
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="End Time"
+          type="time"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+          fullWidth
+          sx={{ mb: 2 }}
+        />
+      </>
+    )}
+  </>
+)}
 
           {(isEdit || !currentSchedule) && (
             <Button variant="contained" onClick={handleSave} fullWidth>{isEdit ? "Save Changes" : "Create"}</Button>
           )}
 
           <Button variant="outlined" onClick={handleClose} fullWidth sx={{ mt: 1 }}>Close</Button>
+        </Box>
+      </Modal>
+
+      <Modal open={breakModalOpen} onClose={handleCloseBreak}>
+        <Box sx={modalStyle}>
+          <Typography variant="h6" gutterBottom>
+            Manage Breaks - {selectedSchedule?.shiftName}
+          </Typography>
+
+          {/* Existing Break List */}
+          {breaktimes
+            .filter(b => b.shiftId === selectedSchedule?.id)
+            .map((b) => (
+              <Paper key={b.id} sx={{ p: 1, mb: 1 }}>
+                <Typography>
+                  {b.startTime} - {b.endTime} | {b.isPaid ? "Paid" : "Unpaid"}
+                </Typography>
+                <Stack direction="row" spacing={1} mt={1}>
+                  <Button size="small" onClick={() => {
+                    setCurrentBreak(b);
+                    setBStart(b.startTime);
+                    setBEnd(b.endTime);
+                    setIsFlexible(b.isFlexible);
+                    setIsPaid(b.isPaid);
+                  }}>
+                    Edit
+                  </Button>
+
+                  <Button
+                    size="small"
+                    color="error"
+                    onClick={() => deleteBreaktime(b.id)}
+                  >
+                    Delete
+                  </Button>
+                </Stack>
+              </Paper>
+            ))}
+
+          {/* Form */}
+          <TextField
+            label="Start Time"
+            type="time"
+            value={bStart}
+            onChange={(e) => setBStart(e.target.value)}
+            fullWidth
+            sx={{ mt: 2 }}
+            InputLabelProps={{ shrink: true }}
+          />
+
+          <TextField
+            label="End Time"
+            type="time"
+            value={bEnd}
+            onChange={(e) => setBEnd(e.target.value)}
+            fullWidth
+            sx={{ mt: 2 }}
+            InputLabelProps={{ shrink: true }}
+          />
+
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Paid</InputLabel>
+            <Select
+              value={isPaid ? "yes" : "no"}
+              label="Paid"
+              onChange={(e) => setIsPaid(e.target.value === "yes")}
+            >
+              <MenuItem value="yes">Paid</MenuItem>
+              <MenuItem value="no">Unpaid</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Button
+            variant="contained"
+            fullWidth
+            sx={{ mt: 2 }}
+            onClick={handleSaveBreak}
+          >
+            {currentBreak ? "Update Break" : "Add Break"}
+          </Button>
+
+          <Button variant="outlined" fullWidth sx={{ mt: 1 }} onClick={handleCloseBreak}>
+            Close
+          </Button>
         </Box>
       </Modal>
     </>

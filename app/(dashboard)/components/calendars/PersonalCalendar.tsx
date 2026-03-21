@@ -205,6 +205,12 @@ export default function LeaveCalendar() {
               <Typography>
                 <strong>Start Time:</strong> {selectedEvent.shift.startTime}
               </Typography>
+               <Typography>
+                <strong>Start Break:</strong> {selectedEvent.shift.breaks[0].startTime}
+              </Typography>
+              <Typography>
+                <strong>End Break:</strong> {selectedEvent.shift.breaks[0].endTime}
+              </Typography>
               <Typography>
                 <strong>End Time:</strong> {selectedEvent.shift.endTime}
               </Typography>

@@ -184,47 +184,67 @@ const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
       {/* Mobile Grid */}
       {isMobile && (
-        <Grid container spacing={2}>
-          {filteredEmployees?.length === 0 ? (
-            <Grid size={[12]}>
-              <Typography align="center">No employee found</Typography>
-            </Grid>
-          ) : (
-            filteredEmployees
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((emp) => (
-                <Grid size={[12]} key={emp.id}>
-                  <Paper sx={{ p: 2 }} elevation={3}>
-                    <Typography>ID: {emp.id}</Typography>
-                    <Typography>Name: {emp.firstName} {emp.lastName}</Typography>
-                    <Typography>Email: {emp.email}</Typography>
-                    <Typography>Contact: {emp.contactNo}</Typography>
-                    <Typography>
-                      Position: {positions.find((p) => p.id === emp.positionId)?.positionName || "—"}
-                    </Typography>
-                    <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        onClick={() => {
-                          setCurrentEmployee(emp);
-                          setIsEdit(true);
-                          setOpen(true);
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button size="small" color="error" onClick={() => handleDelete(emp.id)}>
-                        Delete
-                      </Button>
-                    </Stack>
-                  </Paper>
-                </Grid>
-              ))
-          )}
-        </Grid>
-      )}
+        <>
+          <Grid container spacing={2}>
+            {filteredEmployees?.length === 0 ? (
+              <Grid size={[12]}>
+                <Typography align="center">No employee found</Typography>
+              </Grid>
+            ) : (
+              filteredEmployees
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((emp) => (
+                  <Grid size={[12]} key={emp.id}>
+                    <Paper sx={{ p: 2 }} elevation={3}>
+                      <Typography>ID: {emp.id}</Typography>
+                      <Typography>
+                        Name: {emp.firstName} {emp.lastName}
+                      </Typography>
+                      <Typography>Email: {emp.email}</Typography>
+                      <Typography>Contact: {emp.contactNo}</Typography>
+                      <Typography>
+                        Position:{" "}
+                        {positions.find((p) => p.id === emp.positionId)?.positionName || "—"}
+                      </Typography>
 
+                      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => {
+                            setCurrentEmployee(emp);
+                            setIsEdit(true);
+                            setOpen(true);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="small"
+                          color="error"
+                          onClick={() => handleDelete(emp.id)}
+                        >
+                          Delete
+                        </Button>
+                      </Stack>
+                    </Paper>
+                  </Grid>
+                ))
+            )}
+          </Grid>
+
+          {/* ✅ Mobile Pagination */}
+          <TablePagination
+          sx={{ mb:8 }}
+            component="div"
+            count={filteredEmployees.length}
+            page={page}
+            onPageChange={(e, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[rowsPerPage]}
+          />
+        </>
+      )}
       <EmployeeModal
         open={open}
         onClose={() => setOpen(false)}

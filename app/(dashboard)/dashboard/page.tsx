@@ -191,7 +191,7 @@ export default function AttendancePage() {
         <CircularProgress color="inherit" />
       </Backdrop>
 
-      <Typography variant="h4" fontWeight="bold" mb={1}>Attendance Dashboard</Typography>
+      <Typography variant="h4" sx={{ color: 'gray' }} fontWeight="bold" mb={1}>Attendance Dashboard</Typography>
 
       {/* Summary Cards */}
       <Grid container spacing={2} sx={{ mb: 4 }}>
